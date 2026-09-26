@@ -16,6 +16,7 @@
 # next.js
 /.next/
 /out/
+.vercel
 
 # production
 /build
@@ -39,3 +40,6 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+# Biến môi trường — QUAN TRỌNG, chứa API key
+.env.local
+.env*.local
