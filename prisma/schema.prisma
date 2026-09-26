@@ -1,0 +1,78 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
+}
+
+model TrangPhuc {
+  id            String          @id @default(uuid())
+  ten           String
+  vungMien      String
+  doiTuong      String
+  noiDungVanHoa NoiDungVanHoa[]
+  quyTacPhuHop  QuyTacPhuHop[]
+}
+
+model NoiDungVanHoa {
+  id            String    @id @default(uuid())
+  trangPhuc     TrangPhuc @relation(fields: [trangPhucId], references: [id])
+  trangPhucId   String
+  tieuDe        String
+  noiDung       String
+  nguonThamKhao String?
+}
+
+model MauSac {
+  id          String  @id @default(uuid())
+  ten         String
+  maHex       String
+  gocHue      Float
+  laTrungTinh Boolean @default(false)
+}
+
+model PhuKien {
+  id           String         @id @default(uuid())
+  ten          String
+  vungMien     String
+  quyTacPhuHop QuyTacPhuHop[]
+}
+
+model SuKien {
+  id  String @id @default(uuid())
+  ten String
+}
+
+model QuyTacPhuHop {
+  id          String    @id @default(uuid())
+  trangPhuc   TrangPhuc @relation(fields: [trangPhucId], references: [id])
+  trangPhucId String
+  phuKien     PhuKien   @relation(fields: [phuKienId], references: [id])
+  phuKienId   String
+  mucDo       String
+  ghiChu      String?
+}
+
+model DanhGiaMauSac {
+  id            String @id @default(uuid())
+  mucDo         String
+  noiDungAiSinh String
+}
+
+model ToHopDuocDuyet {
+  id           String   @id @default(uuid())
+  comboKey     String   @unique
+  trangPhucId  String
+  mauChinhId   String
+  mauPhuId     String
+  phuKienId    String
+  suKienId     String
+  danhGiaMauId String
+  imageUrl     String?
+  aiAssessment Json?
+  status       String   @default("draft")
+  createdAt    DateTime @default(now())
+}
