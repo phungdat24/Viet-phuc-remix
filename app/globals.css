@@ -24,3 +24,21 @@ body {
   color: var(--foreground);
   font-family: Arial, Helvetica, sans-serif;
 }
+@theme {
+  --color-paper: #F1E9D6;
+  --color-paper-raised: #E9DDC0;
+  --color-ink: #2A2118;
+  --color-ink-soft: #5B4E3E;
+  --color-lacquer: #9C3B2E;
+  --color-gold: #B3822F;
+  --color-jade: #4B6455;
+
+  --font-display: var(--font-fraunces), serif;
+  --font-body: var(--font-be-vietnam), sans-serif;
+}
+
+body {
+  background-color: var(--color-paper);
+  color: var(--color-ink);
+  font-family: var(--font-body);
+}
