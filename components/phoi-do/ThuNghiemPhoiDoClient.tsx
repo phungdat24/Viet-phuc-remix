@@ -5,6 +5,8 @@ import ChonTrangPhuc from './ChonTrangPhuc';
 import BangMau from './BangMau';
 import ChonPhuKien from './ChonPhuKien';
 import type { TrangPhuc, SuKien, MauSac, PhuKien } from '@/types/phoi-do';
+import XemTruoc from './XemTruoc';
+import { saveLookbook } from '@/lib/localLookbook';
 
 export default function ThuNghiemPhoiDoClient() {
   const [danhSachTrangPhuc, setDanhSachTrangPhuc] = useState<TrangPhuc[]>([]);
@@ -12,6 +14,7 @@ export default function ThuNghiemPhoiDoClient() {
   const [danhSachMau, setDanhSachMau] = useState<MauSac[]>([]);
   const [danhSachPhuKien, setDanhSachPhuKien] = useState<PhuKien[]>([]);
   const [dangTai, setDangTai] = useState(true);
+  const [daLuu, setDaLuu] = useState(false);
 
   const [trangPhucId, setTrangPhucId] = useState<string | null>(null);
   const [suKienId, setSuKienId] = useState<string | null>(null);
@@ -20,6 +23,20 @@ export default function ThuNghiemPhoiDoClient() {
   const [phuKienId, setPhuKienId] = useState<string | null>(null);
 
   const [loi, setLoi] = useState<string | null>(null);
+
+  const trangPhucDangChon = danhSachTrangPhuc.find((tp) => tp.id === trangPhucId) ?? null;
+  const mauChinhDangChon = danhSachMau.find((m) => m.id === mauChinhId) ?? null;
+  const mauPhuDangChon = danhSachMau.find((m) => m.id === mauPhuId) ?? null;
+  const phuKienDangChon = danhSachPhuKien.find((p) => p.id === phuKienId) ?? null;
+
+  const daChonDuDeLuu = trangPhucId && mauChinhId && mauPhuId;
+
+  function xuLyLuuLookbook() {
+  if (!trangPhucId || !mauChinhId || !mauPhuId) return;
+  saveLookbook({ trangPhucId, suKienId, mauChinhId, mauPhuId, phuKienId, ketQuaKiemTra: null });
+  setDaLuu(true);
+  setTimeout(() => setDaLuu(false), 2000);
+}
 
 useEffect(() => {
   async function taiDuLieu() {
@@ -54,9 +71,8 @@ useEffect(() => {
   }
   taiDuLieu();
 }, []);
-
-if (dangTai) return <p className="text-center py-12 text-ink-soft">Đang tải dữ liệu...</p>;
-if (loi) return <p className="text-center py-12 text-lacquer">Đã xảy ra lỗi: {loi}</p>;
+  if (dangTai) return <p className="text-center py-12 text-ink-soft">Đang tải dữ liệu...</p>;
+  if (loi) return <p className="text-center py-12 text-lacquer">Đã xảy ra lỗi: {loi}</p>;
 
   return (
     <main className="max-w-6xl mx-auto px-4 py-8 grid grid-cols-1 md:grid-cols-[320px_1fr] gap-8">
@@ -83,9 +99,26 @@ if (loi) return <p className="text-center py-12 text-lacquer">Đã xảy ra lỗ
         />
       </aside>
 
-      <section className="bg-paper-raised rounded-md flex items-center justify-center text-ink-soft min-h-100">
-        [Khu vực xem trước — sẽ làm ở B7]
-      </section>
+      <section className="bg-paper-raised rounded-md min-h-100 flex flex-col">
+  <div className="flex-1">
+    <XemTruoc
+      trangPhuc={trangPhucDangChon}
+      mauChinh={mauChinhDangChon}
+      mauPhu={mauPhuDangChon}
+      phuKien={phuKienDangChon}
+    />
+  </div>
+  {daChonDuDeLuu && (
+    <div className="p-4 border-t border-ink-soft/15">
+      <button
+        onClick={xuLyLuuLookbook}
+        className="w-full bg-lacquer text-white font-medium py-2.5 rounded-md hover:opacity-90 transition"
+      >
+        {daLuu ? 'Đã lưu vào Lookbook ✓' : 'Lưu vào Lookbook của tôi'}
+      </button>
+    </div>
+  )}
+</section>
     </main>
   );
 }
