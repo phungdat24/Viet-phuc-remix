@@ -1,3 +1,5 @@
+import type { KetQuaKiemTra } from '@/types/phoi-do';
+
 export interface LookbookItem {
   id: string;
   trangPhucId: string;
@@ -5,10 +7,7 @@ export interface LookbookItem {
   mauChinhId: string;
   mauPhuId: string;
   phuKienId: string | null;
-  ketQuaKiemTra: {
-    haiHoaMau: { mucDo: string; goiY: string } | null;
-    phuHopVanHoa: { canhBao: boolean; lyDo: string | null } | null;
-  } | null;
+  ketQuaKiemTra: KetQuaKiemTra | null;
   yeuThich: boolean;
   ngayTao: number;
 }
