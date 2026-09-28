@@ -42,11 +42,14 @@ model PhuKien {
 }
 
 model SuKien {
+  quyTacPhuHop QuyTacPhuHop[]
   id  String @id @default(uuid())
   ten String
 }
 
 model QuyTacPhuHop {
+  suKien      SuKien?   @relation(fields: [suKienId], references: [id])
+  suKienId    String?
   id          String    @id @default(uuid())
   trangPhuc   TrangPhuc @relation(fields: [trangPhucId], references: [id])
   trangPhucId String

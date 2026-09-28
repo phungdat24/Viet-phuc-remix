@@ -59,10 +59,10 @@ useEffect(() => {
           return r.json();
         }),
       ]);
-      setDanhSachTrangPhuc(tp);
-      setDanhSachSuKien(sk);
-      setDanhSachMau(ms);
-      setDanhSachPhuKien(pk);
+      setDanhSachTrangPhuc(tp.data);
+      setDanhSachSuKien(sk.data);
+      setDanhSachMau(ms.data);
+      setDanhSachPhuKien(pk.data);
     } catch (err) {
       setLoi(err instanceof Error ? err.message : 'Lỗi không xác định');
     } finally {
