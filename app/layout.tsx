@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Fraunces, Be_Vietnam_Pro } from "next/font/google";
 import "./globals.css";
+import Sidebar from '@/components/Sidebar';
 
 const fraunces = Fraunces({
   variable: "--font-fraunces",
@@ -21,11 +22,11 @@ export const metadata: Metadata = {
 
 export default function RootLayout({ children }: LayoutProps<"/">) {
   return (
-    <html
-      lang="vi"
-      className={`${fraunces.variable} ${beVietnamPro.variable} h-full antialiased`}
-    >
-      <body className="min-h-full flex flex-col">{children}</body>
+    <html lang="vi" className={`${fraunces.variable} ${beVietnamPro.variable} h-full antialiased`}>
+      <body className="min-h-full flex">
+        <Sidebar />
+        <div className="flex-1">{children}</div>
+      </body>
     </html>
   );
 }
