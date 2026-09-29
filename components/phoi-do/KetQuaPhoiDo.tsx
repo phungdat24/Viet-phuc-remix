@@ -1,6 +1,7 @@
 'use client';
 
 import type { KetQuaKiemTra } from '@/types/phoi-do';
+import SinhAnhAI, { type AnhAIProps } from './SinhAnhAI';
 
 const NHAN_MAU: Record<string, string> = {
   tuong_dong: 'Tương đồng',
@@ -74,9 +75,10 @@ interface Props {
   daSaoChep: boolean;
   onLuu: () => void;
   onChiaSe: () => void;
+  anhAI: AnhAIProps;
 }
 
-export default function KetQuaPhoiDo({ ketQua, daLuu, daSaoChep, onLuu, onChiaSe }: Props) {
+export default function KetQuaPhoiDo({ ketQua, daLuu, daSaoChep, onLuu, onChiaSe, anhAI }: Props) {
   const { haiHoaMau, phuHopVanHoa } = ketQua;
   const dongVH = dongVanHoa(phuHopVanHoa);
 
@@ -98,14 +100,20 @@ export default function KetQuaPhoiDo({ ketQua, daLuu, daSaoChep, onLuu, onChiaSe
         )}
       </DongKetQua>
 
+      <SinhAnhAI {...anhAI} />
+
       <div className="flex gap-2 mt-3">
-        <button
-          onClick={onLuu}
-          disabled={daLuu}
-          className="flex-1 bg-lacquer text-white font-medium py-2.5 rounded-md hover:opacity-90 transition disabled:opacity-60"
-        >
-          {daLuu ? 'Đã lưu vào Lookbook ✓' : 'Lưu Lookbook'}
-        </button>
+        {/* Khi có ảnh AI thì việc lưu Lookbook đi qua bước duyệt ở trên;
+            nút này chỉ còn dùng khi không sinh được ảnh (thiếu dịp hoặc AI bị lỗi). */}
+        {(anhAI.thieuThongTin || (anhAI.loi && !anhAI.toHop && !anhAI.dangSinh)) && (
+          <button
+            onClick={onLuu}
+            disabled={daLuu}
+            className="flex-1 bg-lacquer text-white font-medium py-2.5 rounded-md hover:opacity-90 transition disabled:opacity-60"
+          >
+            {daLuu ? 'Đã lưu vào Lookbook ✓' : 'Lưu Lookbook'}
+          </button>
+        )}
         <button
           onClick={onChiaSe}
           className="flex-1 border border-ink-soft/30 font-medium py-2.5 rounded-md hover:border-gold transition"

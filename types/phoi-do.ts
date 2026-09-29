@@ -41,3 +41,13 @@ export interface KetQuaKiemTra {
   haiHoaMau: KetQuaHaiHoaMau;
   phuHopVanHoa: KetQuaPhuHopVanHoa;
 }
+
+/** Bản ghi tổ hợp đã sinh ảnh AI (bảng ToHopDuocDuyet) — phần client cần dùng. */
+export interface ToHopAI {
+  id: string;
+  comboKey: string;
+  imageUrl: string | null;
+  /** 'draft' = chờ duyệt, 'approved' = đã duyệt, 'rejected' = không duyệt */
+  status: string;
+  aiAssessment: { nhanXetAI: string | null } | null;
+}

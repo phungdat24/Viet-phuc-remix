@@ -4,10 +4,15 @@ export interface LookbookItem {
   id: string;
   trangPhucId: string;
   suKienId: string | null;
+  /** true khi người dùng không chọn dịp và hệ thống bốc ngẫu nhiên suKienId. */
+  suKienNgauNhien?: boolean;
   mauChinhId: string;
   mauPhuId: string;
   phuKienId: string | null;
   ketQuaKiemTra: KetQuaKiemTra | null;
+  /** Ảnh AI đã được duyệt (nếu có). Lookbook cũ không có trường này. */
+  imageUrl?: string | null;
+  toHopId?: string | null;
   yeuThich: boolean;
   ngayTao: number;
 }

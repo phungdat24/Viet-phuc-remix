@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import Link from 'next/link';
 import XemTruoc from '@/components/phoi-do/XemTruoc';
+import GhiChuAnhAI from '@/components/phoi-do/GhiChuAnhAI';
 import { taoNoiDungChiaSe, saoChepChiaSe } from '@/lib/chiaSe';
 import type { LookbookItem } from '@/lib/localLookbook';
 import type { TrangPhuc, SuKien, MauSac, PhuKien } from '@/types/phoi-do';
@@ -31,7 +32,10 @@ export default function TheLookbook({
   const [daSaoChep, setDaSaoChep] = useState(false);
 
   const canhBao = item.ketQuaKiemTra?.phuHopVanHoa?.canhBao ?? false;
-  const meta = [suKien?.ten, phuKien ? phuKien.ten : 'Không phụ kiện']
+  const meta = [
+    suKien ? (item.suKienNgauNhien ? `${suKien.ten} (dịp ngẫu nhiên)` : suKien.ten) : null,
+    phuKien ? phuKien.ten : 'Không phụ kiện',
+  ]
     .filter(Boolean)
     .join(' · ');
 
@@ -51,15 +55,31 @@ export default function TheLookbook({
 
   const thamSo = new URLSearchParams();
   if (item.trangPhucId) thamSo.set('trangPhucId', item.trangPhucId);
-  if (item.suKienId) thamSo.set('suKienId', item.suKienId);
+  // Dịp ngẫu nhiên không phải lựa chọn của người dùng → khi phối lại để trống, hệ thống bốc lại.
+  if (item.suKienId && !item.suKienNgauNhien) thamSo.set('suKienId', item.suKienId);
   if (item.mauChinhId) thamSo.set('mauChinhId', item.mauChinhId);
   if (item.mauPhuId) thamSo.set('mauPhuId', item.mauPhuId);
   if (item.phuKienId) thamSo.set('phuKienId', item.phuKienId);
 
   return (
     <article className="bg-paper-raised rounded-md overflow-hidden flex flex-col">
-      <div className="h-52 bg-paper">
-        <XemTruoc trangPhuc={trangPhuc} mauChinh={mauChinh} mauPhu={mauPhu} phuKien={phuKien} />
+      <div className="bg-paper">
+        {item.imageUrl ? (
+          <>
+            {/* object-contain để thấy trọn cả người từ đầu tới chân, không bị cắt */}
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img
+              src={item.imageUrl}
+              alt={`Ảnh AI: ${trangPhuc?.ten ?? 'bộ phối đồ'}`}
+              className="w-full h-80 object-contain"
+            />
+            <GhiChuAnhAI className="px-4 py-2 border-t border-ink-soft/10" />
+          </>
+        ) : (
+          <div className="h-52">
+            <XemTruoc trangPhuc={trangPhuc} mauChinh={mauChinh} mauPhu={mauPhu} phuKien={phuKien} />
+          </div>
+        )}
       </div>
 
       <div className="p-4 space-y-2 flex-1">
