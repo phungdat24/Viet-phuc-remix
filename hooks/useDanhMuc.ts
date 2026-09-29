@@ -1,7 +1,6 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { layDanhSach } from '@/lib/api';
 import type { TrangPhuc, SuKien, MauSac, PhuKien } from '@/types/phoi-do';
 
 interface DanhMuc {
@@ -16,18 +15,13 @@ export function useDanhMuc() {
   const [loi, setLoi] = useState<string | null>(null);
 
   useEffect(() => {
-    Promise.all([
-      layDanhSach<TrangPhuc>('/api/trang-phuc'),
-      layDanhSach<SuKien>('/api/su-kien'),
-      layDanhSach<MauSac>('/api/mau-sac'),
-      layDanhSach<PhuKien>('/api/phu-kien'),
-    ])
-      .then(([trangPhuc, suKien, mauSac, phuKien]) =>
-        setDanhMuc({ trangPhuc, suKien, mauSac, phuKien })
-      )
-      .catch((err) =>
-        setLoi(err instanceof Error ? err.message : 'Lỗi không xác định')
-      );
+    fetch('/api/danh-muc')
+      .then((res) => {
+        if (!res.ok) throw new Error(`Lỗi API danh-muc: ${res.status}`);
+        return res.json();
+      })
+      .then((json) => setDanhMuc(json.data))
+      .catch((err) => setLoi(err instanceof Error ? err.message : 'Lỗi không xác định'));
   }, []);
 
   return { danhMuc, loi, dangTai: !danhMuc && !loi };

@@ -2,9 +2,9 @@
 
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
-import { loadLookbook, toggleYeuThich, type LookbookItem } from '@/lib/localLookbook';
 import { useDanhMuc } from '@/hooks/useDanhMuc';
 import TheLookbook from './TheLookbook';
+import { loadLookbook, deleteItem, toggleYeuThich, type LookbookItem } from '@/lib/localLookbook';
 
 export default function LookbookClient() {
   const { danhMuc, loi, dangTai } = useDanhMuc();
@@ -20,6 +20,10 @@ export default function LookbookClient() {
     toggleYeuThich(id);
     setItems(loadLookbook());
   }
+  function xuLyXoa(id: string) {
+  deleteItem(id);
+  setItems(loadLookbook());
+}
 
   if (dangTai) {
     return <p className="text-center py-12 text-ink-soft">Đang tải Lookbook...</p>;
@@ -90,6 +94,7 @@ export default function LookbookClient() {
               mauPhu={danhMuc.mauSac.find((x) => x.id === it.mauPhuId) ?? null}
               phuKien={danhMuc.phuKien.find((x) => x.id === it.phuKienId) ?? null}
               onToggleYeuThich={xuLyToggleYeuThich}
+              onXoa={xuLyXoa}
             />
           ))}
         </div>
