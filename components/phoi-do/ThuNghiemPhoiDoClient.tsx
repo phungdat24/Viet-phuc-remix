@@ -227,7 +227,7 @@ export default function ThuNghiemPhoiDoClient() {
     <main className="max-w-6xl mx-auto px-4 py-8">
       <h1 className="font-display text-2xl font-semibold mb-6">Thử nghiệm phối đồ</h1>
 
-      <div className="grid grid-cols-1 lg:grid-cols-[280px_1fr_300px] gap-6">
+      <div className="grid grid-cols-1 lg:grid-cols-[280px_1fr_300px] gap-6 items-start">
         {/* Cột trái: Chọn trang phục & bối cảnh */}
         <aside className="space-y-8">
           <ChonTrangPhuc
