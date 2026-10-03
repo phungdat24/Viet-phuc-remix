@@ -139,25 +139,24 @@ export default function ThuNghiemPhoiDoClient() {
     }
   }
 
-  async function capNhatTrangThai(id: string, status: 'approved' | 'rejected'): Promise<ToHopAI> {
-    const res = await fetch(`/api/to-hop-duoc-duyet/${id}`, {
-      method: 'PATCH',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ status }),
-    });
-    const body = await res.json();
-    if (!res.ok) throw new Error(body.error ?? `Lỗi API (HTTP ${res.status})`);
-    return body.data as ToHopAI;
-  }
+  /**
+   * Lưu bộ phối và ảnh AI vào Lookbook cá nhân.
+   * Việc duyệt tổ hợp trong database do admin thực hiện.
+   */
+  function xuLyDuyetAnh() {
+    if (
+      !toHop ||
+      !trangPhucId ||
+      !mauChinhId ||
+      !mauPhuId ||
+      !ketQua
+    ) {
+      return;
+    }
 
-  /** Duyệt ảnh AI → lưu bộ phối (kèm ảnh) vào Lookbook. */
-  async function xuLyDuyetAnh() {
-    if (!toHop || !trangPhucId || !mauChinhId || !mauPhuId || !ketQua) return;
-    setDangDuyet(true);
     setLoiAnh(null);
+
     try {
-      const hienTai = toHop.status === 'approved' ? toHop : await capNhatTrangThai(toHop.id, 'approved');
-      setToHop(hienTai);
       saveLookbook({
         trangPhucId,
         suKienId: suKienHieuLuc?.id ?? null,
@@ -166,29 +165,30 @@ export default function ThuNghiemPhoiDoClient() {
         mauPhuId,
         phuKienId,
         ketQuaKiemTra: ketQua,
-        imageUrl: hienTai.imageUrl,
-        toHopId: hienTai.id,
+        imageUrl: toHop.imageUrl,
+        toHopId: toHop.id,
       });
+
       setDaLuu(true);
-    } catch (err) {
-      setLoiAnh(err instanceof Error ? err.message : 'Không thể duyệt lúc này');
-    } finally {
-      setDangDuyet(false);
+    } catch (error) {
+      setLoiAnh(
+        error instanceof Error
+          ? error.message
+          : "Không thể lưu bộ phối vào Lookbook cá nhân."
+      );
     }
   }
 
-  /** Không duyệt → không lưu Lookbook. */
-  async function xuLyKhongDuyetAnh() {
+  /**
+   * Người dùng không chọn lưu ảnh.
+   * Không cập nhật trạng thái duyệt trong database.
+   */
+  function xuLyKhongDuyetAnh() {
     if (!toHop) return;
-    setDangDuyet(true);
-    setLoiAnh(null);
-    try {
-      setToHop(await capNhatTrangThai(toHop.id, 'rejected'));
-    } catch (err) {
-      setLoiAnh(err instanceof Error ? err.message : 'Không thể cập nhật lúc này');
-    } finally {
-      setDangDuyet(false);
-    }
+
+    setLoiAnh(
+      "Bạn chưa lưu ảnh này. Có thể chọn Sinh ảnh khác để thử lại."
+    );
   }
 
   function xuLySinhLaiAnh() {

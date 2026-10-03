@@ -106,7 +106,7 @@ export default function SinhAnhAI({
       {biTuChoi ? (
         <div className="space-y-2">
           <p className="text-sm text-ink-soft">
-            Bạn đã không duyệt ảnh này nên bộ phối <strong>không được lưu</strong> vào Lookbook.
+            Ảnh này đã bị quản trị viên từ chối nên bộ phối <strong>không được lưu</strong> vào Lookbook.
           </p>
           <button
             onClick={onSinhLai}
@@ -116,13 +116,13 @@ export default function SinhAnhAI({
           </button>
         </div>
       ) : daLuu ? (
-        <p className="text-sm text-jade font-medium text-center py-2">Đã duyệt và lưu vào Lookbook ✓</p>
+        <p className="text-sm text-jade font-medium text-center py-2">Đã lưu vào Lookbook cá nhân ✓</p>
       ) : (
         <>
           <p className="text-xs text-ink-soft">
             {daDuyet
               ? 'Ảnh này đã được duyệt trước đó.'
-              : 'Bạn có duyệt ảnh này không? Nếu duyệt, bộ phối sẽ được lưu vào Lookbook kèm ảnh AI.'}
+              : 'Bạn có muốn lưu bộ phối kèm ảnh AI vào Lookbook cá nhân không? Ảnh đang chờ quản trị viên duyệt.'}
           </p>
           <div className="flex gap-2">
             <button
@@ -130,7 +130,7 @@ export default function SinhAnhAI({
               disabled={dangDuyet}
               className="flex-1 bg-lacquer text-white font-medium py-2.5 rounded-md hover:opacity-90 transition disabled:opacity-60"
             >
-              {dangDuyet ? 'Đang lưu...' : daDuyet ? 'Lưu vào Lookbook' : 'Duyệt & lưu Lookbook'}
+              {dangDuyet ? 'Đang lưu...' : daDuyet ? 'Lưu vào Lookbook' : 'Lưu vào Lookbook cá nhân'}
             </button>
             {!daDuyet && (
               <button
@@ -138,7 +138,7 @@ export default function SinhAnhAI({
                 disabled={dangDuyet}
                 className="flex-1 border border-ink-soft/30 font-medium py-2.5 rounded-md hover:border-lacquer hover:text-lacquer transition disabled:opacity-60"
               >
-                Không duyệt
+                Không lưu
               </button>
             )}
           </div>
