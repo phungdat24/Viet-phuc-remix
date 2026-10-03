@@ -26,10 +26,6 @@
 
 const MODEL_ANH = "@cf/black-forest-labs/flux-1-schnell";
 const MODEL_VAN_BAN = "@cf/meta/llama-3.1-8b-instruct";
-const id = process.env.CLOUDFLARE_ACCOUNT_ID?.trim();
-const tk = process.env.CLOUDFLARE_API_TOKEN?.trim();
-console.log("[CF DEBUG] account:", id, "| len:", id?.length);
-console.log("[CF DEBUG] token :", tk?.slice(0, 8) + "..." + tk?.slice(-4), "| len:", tk?.length);
 
 export interface DauVaoSinhAnh {
   tenTrangPhuc: string;
@@ -124,8 +120,8 @@ async function goiCloudflareAI<T>(model: string, body: unknown): Promise<T> {
   // Đọc process.env NGAY LÚC GỌI (không cache ở module-level) — tránh dính
   // giá trị cũ nếu Next.js dev server tái sử dụng module đã compile từ trước
   // khi .env có giá trị đúng.
-  const CF_ACCOUNT_ID = process.env.CLOUDFLARE_ACCOUNT_ID;
-  const CF_API_TOKEN = process.env.CLOUDFLARE_API_TOKEN;
+const CF_ACCOUNT_ID = process.env.CLOUDFLARE_ACCOUNT_ID?.trim();
+const CF_API_TOKEN = process.env.CLOUDFLARE_API_TOKEN?.trim();
 
   if (!CF_ACCOUNT_ID || !CF_API_TOKEN) {
     throw new AiLoiCauHinh(
@@ -135,12 +131,6 @@ async function goiCloudflareAI<T>(model: string, body: unknown): Promise<T> {
   }
 
   const CF_BASE_URL = `https://api.cloudflare.com/client/v4/accounts/${CF_ACCOUNT_ID}/ai/run`;
-
-  // LOG TẠM — xoá dòng này sau khi hết lỗi 401. In ra terminal chạy `npm run dev`.
-  console.log(
-    `[goiCloudflareAI] model=${model} accountId=${CF_ACCOUNT_ID.slice(0, 6)}...${CF_ACCOUNT_ID.slice(-4)} ` +
-      `tokenLen=${CF_API_TOKEN.length} tokenEnd=...${CF_API_TOKEN.slice(-4)}`
-  );
 
   const res = await fetch(`${CF_BASE_URL}/${model}`, {
     method: "POST",

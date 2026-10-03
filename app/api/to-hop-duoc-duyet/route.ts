@@ -6,6 +6,7 @@ import { sinhAnhVaDanhGia, AiLoiCauHinh, AiLoiApi } from "@/lib/aiSinhAnh";
 import { writeFile, mkdir, unlink } from "node:fs/promises";
 import path from "node:path";
 import crypto from "node:crypto";
+import { kiemTraQuyenAdmin } from "@/lib/adminAuth";
 
 /**
  * LỚP C4 — Sinh ảnh AI + đánh giá tổng thể cho 1 tổ hợp phối đồ.
@@ -168,24 +169,72 @@ export async function POST(request: NextRequest) {
  * (không chỉ id) để hiển thị cho người duyệt dễ đọc.
  */
 export async function GET(request: NextRequest) {
+  const loiQuyen = kiemTraQuyenAdmin(request);
+  if (loiQuyen) return loiQuyen;
+
   try {
     const { searchParams } = new URL(request.url);
-    const status = searchParams.get("status");
-    const takeParam = Number(searchParams.get("take") ?? "50");
-    const take = Number.isFinite(takeParam) && takeParam > 0 ? Math.min(takeParam, 200) : 50;
 
-    const danhSach = await prisma.toHopDuocDuyet.findMany({
-      where: status ? { status } : undefined,
-      orderBy: { createdAt: "desc" },
-      take,
-    });
+    const status = searchParams.get("status") ?? "draft";
+    const cacTrangThai = ["draft", "approved", "rejected"];
+
+    if (!cacTrangThai.includes(status)) {
+      return NextResponse.json(
+        { error: "Trạng thái không hợp lệ." },
+        { status: 400 },
+      );
+    }
+
+    const take = Number(searchParams.get("take") ?? "50");
+    const skip = Number(searchParams.get("skip") ?? "0");
+
+    if (
+      !Number.isSafeInteger(take) ||
+      take < 1 ||
+      take > 100 ||
+      !Number.isSafeInteger(skip) ||
+      skip < 0
+    ) {
+      return NextResponse.json(
+        { error: "take phải từ 1–100; skip phải là số nguyên không âm." },
+        { status: 400 },
+      );
+    }
+
+    const [danhSach, total] = await prisma.$transaction([
+      prisma.toHopDuocDuyet.findMany({
+        where: { status },
+        orderBy: [{ createdAt: "desc" }, { id: "desc" }],
+        take,
+        skip,
+      }),
+      prisma.toHopDuocDuyet.count({
+        where: { status },
+      }),
+    ]);
 
     const duLieuHienThi = await gomTenLienQuan(danhSach);
 
-    return NextResponse.json({ data: duLieuHienThi, total: duLieuHienThi.length });
+    return NextResponse.json(
+      {
+        data: duLieuHienThi,
+        total,
+        take,
+        skip,
+      },
+      {
+        headers: {
+          "Cache-Control": "no-store",
+        },
+      },
+    );
   } catch (error) {
-    console.error("[GET /api/to-hop-duoc-duyet]", error);
-    return NextResponse.json({ error: "Không thể lấy danh sách tổ hợp." }, { status: 500 });
+    console.error("[GET danh sách duyệt]", error);
+
+    return NextResponse.json(
+      { error: "Không thể lấy danh sách tổ hợp." },
+      { status: 500 },
+    );
   }
 }
 

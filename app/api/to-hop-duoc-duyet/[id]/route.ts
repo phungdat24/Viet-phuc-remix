@@ -1,78 +1,159 @@
 import { NextRequest, NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
-import { Prisma } from "@prisma/client";
-
-const TRANG_THAI_HOP_LE = ["draft", "approved", "rejected"] as const;
-type TrangThai = (typeof TRANG_THAI_HOP_LE)[number];
+import { kiemTraQuyenAdmin } from "@/lib/adminAuth";
 
 /**
  * PATCH /api/to-hop-duoc-duyet/[id]
  *
- * ROUTE DUYỆT — người duyệt (chuyên gia văn hoá / admin) chấp nhận hoặc từ
- * chối 1 tổ hợp đã được C4 sinh ảnh AI (đang ở status "draft").
+ * Quản trị viên duyệt hoặc từ chối tổ hợp đang chờ duyệt.
  *
- * Body JSON:
- *  {
- *    "status": "approved" | "rejected" | "draft"   (bắt buộc)
- *  }
+ * Header:
+ * Authorization: Bearer <khóa quản trị>
  *
- * Chỉ đổi status — không sinh lại ảnh, không đổi comboKey. Muốn sinh lại ảnh
- * cho 1 tổ hợp bị "rejected", xoá bản ghi rồi gọi lại POST /api/to-hop-duoc-duyet
- * (comboKey không còn tồn tại nữa nên sẽ gọi AI sinh ảnh mới).
+ * Body:
+ * { "status": "approved" | "rejected" }
  */
 export async function PATCH(
   request: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
+  { params }: { params: Promise<{ id: string }> },
 ) {
+  // 1. Kiểm tra quyền quản trị.
+  const loiQuyen = kiemTraQuyenAdmin(request);
+  if (loiQuyen) return loiQuyen;
+
   const { id } = await params;
 
+  // 2. Đọc và kiểm tra body JSON.
   let body: unknown;
+
   try {
     body = await request.json();
   } catch {
-    return NextResponse.json({ error: "Body request phải là JSON hợp lệ." }, { status: 400 });
+    return NextResponse.json(
+      { error: "Body phải là JSON hợp lệ." },
+      { status: 400 },
+    );
   }
 
-  const { status } = (body ?? {}) as { status?: unknown };
-  if (typeof status !== "string" || !TRANG_THAI_HOP_LE.includes(status as TrangThai)) {
+  if (typeof body !== "object" || body === null || Array.isArray(body)) {
     return NextResponse.json(
-      { error: `status phải là 1 trong: ${TRANG_THAI_HOP_LE.join(", ")}.` },
-      { status: 400 }
+      { error: "Body phải là một object." },
+      { status: 400 },
+    );
+  }
+
+  const b = body as Record<string, unknown>;
+  const status = b.status;
+
+  if (status !== "approved" && status !== "rejected") {
+    return NextResponse.json(
+      { error: "status phải là approved hoặc rejected." },
+      { status: 400 },
     );
   }
 
   try {
-    const banGhi = await prisma.toHopDuocDuyet.update({
+    // 3. Kiểm tra tổ hợp có tồn tại không.
+    const hienTai = await prisma.toHopDuocDuyet.findUnique({
       where: { id },
+    });
+
+    if (!hienTai) {
+      return NextResponse.json(
+        { error: "Không tìm thấy tổ hợp." },
+        { status: 404 },
+      );
+    }
+
+    // 4. Chỉ xử lý tổ hợp đang chờ duyệt.
+    if (hienTai.status !== "draft") {
+      return NextResponse.json(
+        { error: "Tổ hợp đã được xử lý. Hãy tải lại danh sách." },
+        { status: 409 },
+      );
+    }
+
+    // 5. Không duyệt tổ hợp chưa có đường dẫn ảnh.
+    if (status === "approved" && !hienTai.imageUrl) {
+      return NextResponse.json(
+        { error: "Không thể duyệt tổ hợp chưa có ảnh." },
+        { status: 400 },
+      );
+    }
+
+    // 6. Kiểm tra trạng thái ngay tại bước cập nhật,
+    // tránh hai yêu cầu đồng thời ghi đè quyết định của nhau.
+    const ketQua = await prisma.toHopDuocDuyet.updateMany({
+      where: {
+        id,
+        status: "draft",
+        ...(status === "approved" ? { imageUrl: { not: null } } : {}),
+      },
       data: { status },
     });
-    return NextResponse.json({ data: banGhi });
-  } catch (error) {
-    if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === "P2025") {
-      return NextResponse.json({ error: `Không tìm thấy tổ hợp với id "${id}".` }, { status: 404 });
+
+    if (ketQua.count !== 1) {
+      return NextResponse.json(
+        { error: "Tổ hợp đã thay đổi. Hãy tải lại danh sách." },
+        { status: 409 },
+      );
     }
-    console.error("[PATCH /api/to-hop-duoc-duyet/[id]]", error);
-    return NextResponse.json({ error: "Không thể cập nhật trạng thái duyệt." }, { status: 500 });
+
+    return NextResponse.json(
+      { data: { id, status } },
+      { headers: { "Cache-Control": "no-store" } },
+    );
+  } catch (error) {
+    console.error("[PATCH duyệt tổ hợp]", error);
+
+    return NextResponse.json(
+      { error: "Không thể cập nhật trạng thái." },
+      { status: 500 },
+    );
   }
 }
 
 /**
  * GET /api/to-hop-duoc-duyet/[id]
- * Xem chi tiết 1 tổ hợp — tiện cho trang duyệt khi mở 1 item cụ thể.
+ *
+ * Quản trị viên xem chi tiết một tổ hợp.
+ *
+ * Header:
+ * Authorization: Bearer <khóa quản trị>
  */
 export async function GET(
-  _request: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
+  request: NextRequest,
+  { params }: { params: Promise<{ id: string }> },
 ) {
+  // 1. Kiểm tra quyền quản trị.
+  const loiQuyen = kiemTraQuyenAdmin(request);
+  if (loiQuyen) return loiQuyen;
+
   const { id } = await params;
+
   try {
-    const banGhi = await prisma.toHopDuocDuyet.findUnique({ where: { id } });
+    // 2. Lấy tổ hợp theo ID.
+    const banGhi = await prisma.toHopDuocDuyet.findUnique({
+      where: { id },
+    });
+
     if (!banGhi) {
-      return NextResponse.json({ error: `Không tìm thấy tổ hợp với id "${id}".` }, { status: 404 });
+      return NextResponse.json(
+        { error: "Không tìm thấy tổ hợp." },
+        { status: 404 },
+      );
     }
-    return NextResponse.json({ data: banGhi });
+
+    return NextResponse.json(
+      { data: banGhi },
+      { headers: { "Cache-Control": "no-store" } },
+    );
   } catch (error) {
-    console.error("[GET /api/to-hop-duoc-duyet/[id]]", error);
-    return NextResponse.json({ error: "Không thể lấy chi tiết tổ hợp." }, { status: 500 });
+    console.error("[GET chi tiết tổ hợp]", error);
+
+    return NextResponse.json(
+      { error: "Không thể lấy chi tiết tổ hợp." },
+      { status: 500 },
+    );
   }
 }
