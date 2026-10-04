@@ -8,7 +8,10 @@ export interface LookbookItem {
   suKienNgauNhien?: boolean;
   mauChinhId: string;
   mauPhuId: string;
+  /** Phụ kiện đầu tiên (giữ để tương thích bản cũ). Dùng `layPhuKienIds()` để đọc đủ. */
   phuKienId: string | null;
+  /** Tất cả phụ kiện đã chọn. Lookbook cũ không có trường này. */
+  phuKienIds?: string[];
   ketQuaKiemTra: KetQuaKiemTra | null;
   /** Ảnh AI đã được duyệt (nếu có). Lookbook cũ không có trường này. */
   imageUrl?: string | null;
@@ -18,6 +21,12 @@ export interface LookbookItem {
 }
 
 const KEY = 'viet-phuc-remix-lookbook';
+
+/** Đọc danh sách phụ kiện của 1 bộ phối, chấp nhận cả dữ liệu cũ (chỉ có phuKienId). */
+export function layPhuKienIds(item: Pick<LookbookItem, 'phuKienId' | 'phuKienIds'>): string[] {
+  if (item.phuKienIds && item.phuKienIds.length > 0) return item.phuKienIds;
+  return item.phuKienId ? [item.phuKienId] : [];
+}
 
 export function loadLookbook(): LookbookItem[] {
   try {

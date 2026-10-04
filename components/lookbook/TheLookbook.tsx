@@ -6,6 +6,7 @@ import XemTruoc from '@/components/phoi-do/XemTruoc';
 import GhiChuAnhAI from '@/components/phoi-do/GhiChuAnhAI';
 import { taoNoiDungChiaSe, saoChepChiaSe } from '@/lib/chiaSe';
 import type { LookbookItem } from '@/lib/localLookbook';
+import { layPhuKienIds } from '@/lib/localLookbook';
 import type { TrangPhuc, SuKien, MauSac, PhuKien } from '@/types/phoi-do';
 
 interface Props {
@@ -14,7 +15,8 @@ interface Props {
   suKien: SuKien | null;
   mauChinh: MauSac | null;
   mauPhu: MauSac | null;
-  phuKien: PhuKien | null;
+  /** Các phụ kiện của bộ phối (mảng rỗng = không dùng). */
+  cacPhuKien: PhuKien[];
   onToggleYeuThich: (id: string) => void;
   onXoa: (id: string) => void;
 }
@@ -25,7 +27,7 @@ export default function TheLookbook({
   suKien,
   mauChinh,
   mauPhu,
-  phuKien,
+  cacPhuKien,
   onToggleYeuThich,
   onXoa,
 }: Props) {
@@ -34,13 +36,13 @@ export default function TheLookbook({
   const canhBao = item.ketQuaKiemTra?.phuHopVanHoa?.canhBao ?? false;
   const meta = [
     suKien ? (item.suKienNgauNhien ? `${suKien.ten} (dịp ngẫu nhiên)` : suKien.ten) : null,
-    phuKien ? phuKien.ten : 'Không phụ kiện',
+    cacPhuKien.length > 0 ? cacPhuKien.map((p) => p.ten).join(', ') : 'Không phụ kiện',
   ]
     .filter(Boolean)
     .join(' · ');
 
   async function xuLyChiaSe() {
-    const noiDung = taoNoiDungChiaSe({ trangPhuc, suKien, mauChinh, mauPhu, phuKien });
+    const noiDung = taoNoiDungChiaSe({ trangPhuc, suKien, mauChinh, mauPhu, cacPhuKien });
     if (!noiDung) return;
     const thanhCong = await saoChepChiaSe(noiDung);
     setDaSaoChep(thanhCong);
@@ -59,7 +61,8 @@ export default function TheLookbook({
   if (item.suKienId && !item.suKienNgauNhien) thamSo.set('suKienId', item.suKienId);
   if (item.mauChinhId) thamSo.set('mauChinhId', item.mauChinhId);
   if (item.mauPhuId) thamSo.set('mauPhuId', item.mauPhuId);
-  if (item.phuKienId) thamSo.set('phuKienId', item.phuKienId);
+  const phuKienIds = layPhuKienIds(item);
+  if (phuKienIds.length > 0) thamSo.set('phuKienIds', phuKienIds.join(','));
 
   return (
     <article className="bg-paper-raised rounded-md overflow-hidden flex flex-col">
@@ -76,8 +79,9 @@ export default function TheLookbook({
             <GhiChuAnhAI className="px-4 py-2 border-t border-ink-soft/10" />
           </>
         ) : (
-          <div className="h-52">
-            <XemTruoc trangPhuc={trangPhuc} mauChinh={mauChinh} mauPhu={mauPhu} phuKien={phuKien} />
+          // XemTruoc phủ kín khung cha (absolute inset-0) nên khung này bắt buộc có `relative` + chiều cao.
+          <div className="relative h-72">
+            <XemTruoc trangPhuc={trangPhuc} mauChinh={mauChinh} mauPhu={mauPhu} cacPhuKien={cacPhuKien} />
           </div>
         )}
       </div>

@@ -79,7 +79,7 @@ export default function SinhAnhAI({
         <img
           src={toHop.imageUrl}
           alt="Ảnh AI sinh cho bộ phối đồ"
-          className="w-full max-h-[640px] object-contain rounded-md border border-ink-soft/15 bg-paper"
+          className="w-full max-h-160 ect-contain rounded-md border border-ink-soft/15 bg-paper"
         />
       )}
 

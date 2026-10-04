@@ -3,9 +3,14 @@
 import type { MauSac } from '@/types/phoi-do';
 
 interface Props {
-  danhSachMau: MauSac[];
+  /** Màu chính được phép theo trang phục đang chọn (đã lọc sẵn ở component cha). */
+  danhSachMauChinh: MauSac[];
+  /** Màu phụ được phép theo trang phục đang chọn (đã lọc sẵn ở component cha). */
+  danhSachMauPhu: MauSac[];
   mauChinhDangChon: string | null;
   mauPhuDangChon: string | null;
+  /** false khi chưa chọn trang phục -> hiện lời nhắc thay vì bảng màu. */
+  daChonTrangPhuc: boolean;
   onChonMauChinh: (id: string) => void;
   onChonMauPhu: (id: string) => void;
 }
@@ -20,13 +25,16 @@ function HangMau({
   onChon: (id: string) => void;
 }) {
   return (
-    <div className="grid grid-cols-5 gap-3">
+    <div className="grid grid-cols-3 gap-x-3 gap-y-2">
       {danhSachMau.map((m) => (
         <button
           key={m.id}
+          type="button"
           onClick={() => onChon(m.id)}
           title={m.ten}
-          className="flex flex-col items-center gap-1"
+          aria-label={m.ten}
+          aria-pressed={dangChon === m.id}
+          className="flex flex-col items-center gap-1 p-1"
         >
           <span
             className={`w-8 h-8 rounded-full border ${
@@ -42,25 +50,40 @@ function HangMau({
 }
 
 export default function BangMau({
-  danhSachMau,
+  danhSachMauChinh,
+  danhSachMauPhu,
   mauChinhDangChon,
   mauPhuDangChon,
+  daChonTrangPhuc,
   onChonMauChinh,
   onChonMauPhu,
 }: Props) {
-  return (
-    <div className="space-y-5">
+  if (!daChonTrangPhuc) {
+    return (
       <div>
         <h3 className="font-display text-sm font-semibold text-ink-soft uppercase tracking-wide mb-3">
+          Màu sắc
+        </h3>
+        <p className="text-sm text-ink-soft">
+          Chọn trang phục trước, các màu phù hợp với trang phục đó sẽ hiện ra ở đây.
+        </p>
+      </div>
+    );
+  }
+
+  return (
+    <div className="space-y-4">
+      <div>
+        <h3 className="font-display text-sm font-semibold text-ink-soft uppercase tracking-wide mb-2">
           Màu chính
         </h3>
-        <HangMau danhSachMau={danhSachMau} dangChon={mauChinhDangChon} onChon={onChonMauChinh} />
+        <HangMau danhSachMau={danhSachMauChinh} dangChon={mauChinhDangChon} onChon={onChonMauChinh} />
       </div>
       <div>
-        <h3 className="font-display text-sm font-semibold text-ink-soft uppercase tracking-wide mb-3">
+        <h3 className="font-display text-sm font-semibold text-ink-soft uppercase tracking-wide mb-2">
           Màu phụ
         </h3>
-        <HangMau danhSachMau={danhSachMau} dangChon={mauPhuDangChon} onChon={onChonMauPhu} />
+        <HangMau danhSachMau={danhSachMauPhu} dangChon={mauPhuDangChon} onChon={onChonMauPhu} />
       </div>
     </div>
   );

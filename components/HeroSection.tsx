@@ -1,27 +1,39 @@
+import Image from 'next/image';
 import Link from 'next/link';
 
 export default function HeroSection() {
   return (
-    <section className="bg-paper-raised rounded-lg overflow-hidden flex flex-col md:flex-row items-center gap-8 p-8 md:p-12">
-      <div className="flex-1 space-y-4">
-        <h1 className="font-display text-3xl md:text-4xl font-semibold text-ink leading-tight">
-          Khám phá vẻ đẹp của Áo dài truyền thống
+    <section className="relative overflow-hidden rounded-md min-h-115 md:min-h-130 flex items-center">
+      {/* Ảnh nền do Gemini tạo; người mẫu nằm bên phải, bên trái để trống cho chữ */}
+      <Image
+        src="/images/hero-viet-phuc.jpg"
+        alt="Ba trang phục truyền thống Việt Nam: áo bà ba, áo dài và áo tứ thân"
+        fill
+        priority
+        sizes="(min-width: 1024px) 1024px, 100vw"
+        className="object-cover object-right"
+      />
+
+      {/* Lớp phủ giúp chữ dễ đọc: kem đậm bên trái, mờ dần sang phải (màn hình lớn) */}
+      <div
+        aria-hidden
+        className="absolute inset-0 bg-paper/75 md:bg-transparent md:bg-linear-to-r md:from-paper md:from-30% md:via-paper/70 md:via-50% md:to-transparent"
+      />
+
+      <div className="relative z-10 px-6 py-12 md:px-12 md:max-w-[58%]">
+        <h1 className="font-display text-3xl md:text-4xl lg:text-5xl font-semibold leading-tight text-ink">
+          Khám phá vẻ đẹp Việt phục, phối theo cách của bạn
         </h1>
-        <p className="text-ink-soft text-base md:text-lg max-w-md">
-          Chọn trang phục, phối màu và phụ kiện — xem gợi ý có hợp tông, có đúng
-          nếp văn hoá hay không, rồi lưu lại thành lookbook của riêng bạn.
+        <p className="mt-4 text-base md:text-lg text-ink-soft leading-relaxed">
+          Chọn trang phục, phối màu và phụ kiện — xem gợi ý có hợp tông, có đúng nếp văn hoá hay không,
+          rồi lưu lại thành lookbook của riêng bạn.
         </p>
         <Link
           href="/phoi-do"
-          className="inline-block bg-lacquer text-white font-medium px-6 py-3 rounded-md hover:opacity-90 transition"
+          className="inline-block mt-6 bg-lacquer text-white font-medium px-6 py-3 rounded-md hover:opacity-90 transition"
         >
-          Khám phá & Phối đồ ngay
+          Khám phá &amp; Phối đồ ngay
         </Link>
-      </div>
-      <div className="flex-1 w-full max-w-sm">
-        <div className="aspect-[3/4] bg-paper rounded-md flex items-center justify-center text-ink-soft text-sm">
-          [Hình minh hoạ nhân vật]
-        </div>
       </div>
     </section>
   );

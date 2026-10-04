@@ -4,7 +4,14 @@ import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { useDanhMuc } from '@/hooks/useDanhMuc';
 import TheLookbook from './TheLookbook';
-import { loadLookbook, deleteItem, toggleYeuThich, type LookbookItem } from '@/lib/localLookbook';
+import {
+  loadLookbook,
+  deleteItem,
+  toggleYeuThich,
+  layPhuKienIds,
+  type LookbookItem,
+} from '@/lib/localLookbook';
+import type { PhuKien } from '@/types/phoi-do';
 
 export default function LookbookClient() {
   const { danhMuc, loi, dangTai } = useDanhMuc();
@@ -20,10 +27,11 @@ export default function LookbookClient() {
     toggleYeuThich(id);
     setItems(loadLookbook());
   }
+
   function xuLyXoa(id: string) {
-  deleteItem(id);
-  setItems(loadLookbook());
-}
+    deleteItem(id);
+    setItems(loadLookbook());
+  }
 
   if (dangTai) {
     return <p className="text-center py-12 text-ink-soft">Đang tải Lookbook...</p>;
@@ -31,6 +39,12 @@ export default function LookbookClient() {
   if (loi || !danhMuc) {
     return <p className="text-center py-12 text-lacquer">Đã xảy ra lỗi: {loi}</p>;
   }
+
+  // Tra theo id bằng Map (O(1)) thay vì .find() lồng trong vòng lặp.
+  const trangPhucTheoId = new Map(danhMuc.trangPhuc.map((x) => [x.id, x]));
+  const suKienTheoId = new Map(danhMuc.suKien.map((x) => [x.id, x]));
+  const mauTheoId = new Map(danhMuc.mauSac.map((x) => [x.id, x]));
+  const phuKienTheoId = new Map(danhMuc.phuKien.map((x) => [x.id, x]));
 
   const cacTab = [
     { id: 'tat-ca', ten: 'Tất cả' },
@@ -88,11 +102,13 @@ export default function LookbookClient() {
             <TheLookbook
               key={it.id}
               item={it}
-              trangPhuc={danhMuc.trangPhuc.find((x) => x.id === it.trangPhucId) ?? null}
-              suKien={danhMuc.suKien.find((x) => x.id === it.suKienId) ?? null}
-              mauChinh={danhMuc.mauSac.find((x) => x.id === it.mauChinhId) ?? null}
-              mauPhu={danhMuc.mauSac.find((x) => x.id === it.mauPhuId) ?? null}
-              phuKien={danhMuc.phuKien.find((x) => x.id === it.phuKienId) ?? null}
+              trangPhuc={trangPhucTheoId.get(it.trangPhucId) ?? null}
+              suKien={it.suKienId ? (suKienTheoId.get(it.suKienId) ?? null) : null}
+              mauChinh={mauTheoId.get(it.mauChinhId) ?? null}
+              mauPhu={mauTheoId.get(it.mauPhuId) ?? null}
+              cacPhuKien={layPhuKienIds(it)
+                .map((id) => phuKienTheoId.get(id))
+                .filter((p): p is PhuKien => Boolean(p))}
               onToggleYeuThich={xuLyToggleYeuThich}
               onXoa={xuLyXoa}
             />

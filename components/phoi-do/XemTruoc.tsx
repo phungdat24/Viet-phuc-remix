@@ -6,13 +6,21 @@ interface Props {
   trangPhuc: TrangPhuc | null;
   mauChinh: MauSac | null;
   mauPhu: MauSac | null;
-  phuKien: PhuKien | null;
+  /** Tất cả phụ kiện đang chọn (mảng rỗng = không dùng). */
+  cacPhuKien: PhuKien[];
 }
 
 const MAU_PHU_KIEN_CO_DINH = '#3E3226';
 const MAU_PHU_KIEN_VANG = '#B3822F';
 const MAU_DA = '#D9C3A0';
 const MAU_GIAY = '#5C4632';
+
+/** Thuộc tính chung cho cả 3 hình: lấp đầy khung cha, giữ nguyên tỉ lệ, không bị méo. */
+const SVG_PROPS = {
+  viewBox: '0 -32 200 412',
+  preserveAspectRatio: 'xMidYMid meet',
+  className: 'h-full w-full',
+} as const;
 
 function lamToiMau(hex: string, phanTram = 14): string {
   const so = parseInt(hex.replace('#', ''), 16);
@@ -24,13 +32,12 @@ function lamToiMau(hex: string, phanTram = 14): string {
   return `#${toHex(r)}${toHex(g)}${toHex(b)}`;
 }
 
-function LopPhuKien({ tenPhuKien }: { tenPhuKien: string | undefined }) {
-  if (!tenPhuKien) return null;
-
-  if (tenPhuKien === 'Nón lá') {
+/** Vẽ MỘT phụ kiện theo tên. */
+function MotPhuKien({ ten }: { ten: string }) {
+  if (ten === 'Nón lá') {
     return <polygon fill={MAU_PHU_KIEN_CO_DINH} points="48,8 100,-30 152,8 132,17 68,17" />;
   }
-  if (tenPhuKien === 'Khăn mỏ quạ') {
+  if (ten === 'Khăn mỏ quạ') {
     return (
       <>
         <path d="M76,16 C76,0 124,0 124,16 L118,32 C108,23 92,23 82,32 Z" fill={MAU_PHU_KIEN_CO_DINH} />
@@ -38,7 +45,7 @@ function LopPhuKien({ tenPhuKien }: { tenPhuKien: string | undefined }) {
       </>
     );
   }
-  if (tenPhuKien === 'Nón quai thao') {
+  if (ten === 'Nón quai thao') {
     return (
       <>
         <ellipse fill={MAU_PHU_KIEN_CO_DINH} cx="100" cy="4" rx="60" ry="16" />
@@ -46,7 +53,7 @@ function LopPhuKien({ tenPhuKien }: { tenPhuKien: string | undefined }) {
       </>
     );
   }
-  if (tenPhuKien === 'Khăn đóng') {
+  if (ten === 'Khăn đóng') {
     return (
       <>
         <ellipse fill={MAU_PHU_KIEN_CO_DINH} cx="100" cy="14" rx="28" ry="12" />
@@ -54,15 +61,15 @@ function LopPhuKien({ tenPhuKien }: { tenPhuKien: string | undefined }) {
       </>
     );
   }
-  if (tenPhuKien === 'Khăn rằn') {
+  if (ten === 'Khăn rằn') {
     return <polygon fill={MAU_PHU_KIEN_CO_DINH} points="60,58 86,58 130,224 104,224" />;
   }
-  if (tenPhuKien === 'Trâm cài') {
+  if (ten === 'Trâm cài') {
     return (
       <line x1="112" y1="14" x2="132" y2="-4" stroke={MAU_PHU_KIEN_VANG} strokeWidth="2.5" strokeLinecap="round" />
     );
   }
-  if (tenPhuKien === 'Quạt giấy') {
+  if (ten === 'Quạt giấy') {
     return (
       <g>
         <path d="M148,148 L175,106 A38,38 0 0,1 180,140 Z" fill={MAU_PHU_KIEN_VANG} fillOpacity="0.9" />
@@ -70,25 +77,31 @@ function LopPhuKien({ tenPhuKien }: { tenPhuKien: string | undefined }) {
       </g>
     );
   }
+  if (ten === 'Guốc mộc') {
+    return (
+      <>
+        <polygon fill={MAU_PHU_KIEN_CO_DINH} points="68,392 94,392 92,405 66,405" />
+        <polygon fill={MAU_PHU_KIEN_CO_DINH} points="106,392 132,392 134,405 108,405" />
+      </>
+    );
+  }
   return null;
 }
 
-/** Giày mặc định — luôn hiện trừ khi đã chọn Guốc mộc (lúc đó hình guốc đặc trưng hơn sẽ thay thế). */
-function GiayMacDinh({ an }: { an: boolean }) {
-  if (an) return null;
+/** Vẽ tất cả phụ kiện đang chọn (Guốc mộc thay giày mặc định). */
+function LopPhuKien({ tenCacPhuKien }: { tenCacPhuKien: string[] }) {
+  const coGuoc = tenCacPhuKien.includes('Guốc mộc');
   return (
     <>
-      <ellipse cx="82" cy="398" rx="11" ry="6" fill={MAU_GIAY} />
-      <ellipse cx="118" cy="398" rx="11" ry="6" fill={MAU_GIAY} />
-    </>
-  );
-}
-
-function HinhGuocMoc() {
-  return (
-    <>
-      <polygon fill={MAU_PHU_KIEN_CO_DINH} points="68,392 94,392 92,405 66,405" />
-      <polygon fill={MAU_PHU_KIEN_CO_DINH} points="106,392 132,392 134,405 108,405" />
+      {!coGuoc && (
+        <>
+          <ellipse cx="82" cy="398" rx="11" ry="6" fill={MAU_GIAY} />
+          <ellipse cx="118" cy="398" rx="11" ry="6" fill={MAU_GIAY} />
+        </>
+      )}
+      {tenCacPhuKien.map((ten) => (
+        <MotPhuKien key={ten} ten={ten} />
+      ))}
     </>
   );
 }
@@ -115,10 +128,16 @@ function DauNguoi() {
   );
 }
 
-function AoDaiSvg({ mauChinh, mauPhu, tenPhuKien }: { mauChinh: string; mauPhu: string; tenPhuKien?: string }) {
+interface SvgProps {
+  mauChinh: string;
+  mauPhu: string;
+  tenCacPhuKien: string[];
+}
+
+function AoDaiSvg({ mauChinh, mauPhu, tenCacPhuKien }: SvgProps) {
   const toi = lamToiMau(mauChinh);
   return (
-    <svg viewBox="0 -32 200 412" className="h-72 md:h-80 w-auto">
+    <svg {...SVG_PROPS}>
       <polygon fill={mauChinh} points="78,60 68,68 60,93 55,123 58,148 70,153 74,126 78,98 82,72" />
       <polygon fill={mauChinh} points="122,60 132,68 140,93 145,123 142,148 130,153 126,126 122,98 118,72" />
 
@@ -150,17 +169,15 @@ function AoDaiSvg({ mauChinh, mauPhu, tenPhuKien }: { mauChinh: string; mauPhu: 
       <BanTay x={138} y={150} />
 
       <DauNguoi />
-      <LopPhuKien tenPhuKien={tenPhuKien} />
-      <GiayMacDinh an={tenPhuKien === 'Guốc mộc'} />
-      {tenPhuKien === 'Guốc mộc' && <HinhGuocMoc />}
+      <LopPhuKien tenCacPhuKien={tenCacPhuKien} />
     </svg>
   );
 }
 
-function AoTuThanSvg({ mauChinh, mauPhu, tenPhuKien }: { mauChinh: string; mauPhu: string; tenPhuKien?: string }) {
+function AoTuThanSvg({ mauChinh, mauPhu, tenCacPhuKien }: SvgProps) {
   const toi = lamToiMau(mauChinh);
   return (
-    <svg viewBox="0 -32 200 412" className="h-72 md:h-80 w-auto">
+    <svg {...SVG_PROPS}>
       <polygon fill={mauChinh} points="64,58 52,70 44,98 40,133 44,146 60,148 62,118 66,90 70,66" />
       <polygon fill={mauChinh} points="136,58 148,70 156,98 160,133 156,146 140,148 138,118 134,90 130,66" />
 
@@ -183,18 +200,16 @@ function AoTuThanSvg({ mauChinh, mauPhu, tenPhuKien }: { mauChinh: string; mauPh
       <BanTay x={154} y={148} />
 
       <DauNguoi />
-      <LopPhuKien tenPhuKien={tenPhuKien} />
-      <GiayMacDinh an={tenPhuKien === 'Guốc mộc'} />
-      {tenPhuKien === 'Guốc mộc' && <HinhGuocMoc />}
+      <LopPhuKien tenCacPhuKien={tenCacPhuKien} />
     </svg>
   );
 }
 
-function AoBaBaSvg({ mauChinh, mauPhu, tenPhuKien }: { mauChinh: string; mauPhu: string; tenPhuKien?: string }) {
+function AoBaBaSvg({ mauChinh, mauPhu, tenCacPhuKien }: SvgProps) {
   const toiPhu = lamToiMau(mauPhu);
   const toiChinh = lamToiMau(mauChinh);
   return (
-    <svg viewBox="0 -32 200 412" className="h-72 md:h-80 w-auto">
+    <svg {...SVG_PROPS}>
       <polygon fill={mauChinh} points="68,58 58,68 50,93 46,123 50,143 66,146 68,118 72,93 76,68" />
       <polygon fill={mauChinh} points="132,58 142,68 150,93 154,123 150,143 134,146 132,118 128,93 124,68" />
 
@@ -215,17 +230,19 @@ function AoBaBaSvg({ mauChinh, mauPhu, tenPhuKien }: { mauChinh: string; mauPhu:
       <BanTay x={150} y={145} />
 
       <DauNguoi />
-      <LopPhuKien tenPhuKien={tenPhuKien} />
-      <GiayMacDinh an={tenPhuKien === 'Guốc mộc'} />
-      {tenPhuKien === 'Guốc mộc' && <HinhGuocMoc />}
+      <LopPhuKien tenCacPhuKien={tenCacPhuKien} />
     </svg>
   );
 }
 
-export default function XemTruoc({ trangPhuc, mauChinh, mauPhu, phuKien }: Props) {
+/**
+ * LƯU Ý: component này phủ kín khung cha (absolute inset-0),
+ * nên khung cha phải có `relative` và có chiều cao (xem ThuNghiemPhoiDoClient).
+ */
+export default function XemTruoc({ trangPhuc, mauChinh, mauPhu, cacPhuKien }: Props) {
   if (!trangPhuc) {
     return (
-      <div className="flex items-center justify-center h-64 text-ink-soft text-sm text-center px-6">
+      <div className="absolute inset-0 flex items-center justify-center text-ink-soft text-sm text-center px-6">
         Chọn một trang phục ở bên trái để bắt đầu xem trước
       </div>
     );
@@ -233,18 +250,18 @@ export default function XemTruoc({ trangPhuc, mauChinh, mauPhu, phuKien }: Props
 
   const mauChinhHex = mauChinh?.maHex ?? '#E4D3B4';
   const mauPhuHex = mauPhu?.maHex ?? '#E4D3B4';
-  const tenPhuKien = phuKien?.ten;
+  const tenCacPhuKien = cacPhuKien.map((p) => p.ten.normalize('NFC').trim());
 
   return (
-    <div className="flex items-center justify-center py-4">
+    <div className="absolute inset-0 flex items-center justify-center p-3">
       {trangPhuc.ten === 'Áo dài' && (
-        <AoDaiSvg mauChinh={mauChinhHex} mauPhu={mauPhuHex} tenPhuKien={tenPhuKien} />
+        <AoDaiSvg mauChinh={mauChinhHex} mauPhu={mauPhuHex} tenCacPhuKien={tenCacPhuKien} />
       )}
       {trangPhuc.ten === 'Áo tứ thân' && (
-        <AoTuThanSvg mauChinh={mauChinhHex} mauPhu={mauPhuHex} tenPhuKien={tenPhuKien} />
+        <AoTuThanSvg mauChinh={mauChinhHex} mauPhu={mauPhuHex} tenCacPhuKien={tenCacPhuKien} />
       )}
       {trangPhuc.ten === 'Áo bà ba' && (
-        <AoBaBaSvg mauChinh={mauChinhHex} mauPhu={mauPhuHex} tenPhuKien={tenPhuKien} />
+        <AoBaBaSvg mauChinh={mauChinhHex} mauPhu={mauPhuHex} tenCacPhuKien={tenCacPhuKien} />
       )}
     </div>
   );

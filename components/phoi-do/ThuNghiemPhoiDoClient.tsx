@@ -9,8 +9,18 @@ import XemTruoc from './XemTruoc';
 import KetQuaPhoiDo from './KetQuaPhoiDo';
 import { saveLookbook } from '@/lib/localLookbook';
 import { taoNoiDungChiaSe, saoChepChiaSe } from '@/lib/chiaSe';
+import { layBoMau, chuanHoaTen } from '@/lib/mauTheoTrangPhuc';
+import { layPhuKienChoPhep, layNhomCuaPhuKien } from '@/lib/phuKienTheoTrangPhuc';
 import { useDanhMuc } from '@/hooks/useDanhMuc';
 import type { KetQuaKiemTra, SuKien, ToHopAI } from '@/types/phoi-do';
+
+/** Đọc danh sách phụ kiện từ URL: ưu tiên `phuKienIds=a,b`, nếu không có thì dùng `phuKienId=a` (bản cũ). */
+function docPhuKienTuUrl(params: URLSearchParams): string[] {
+  const nhieu = params.get('phuKienIds');
+  if (nhieu) return nhieu.split(',').filter(Boolean);
+  const mot = params.get('phuKienId');
+  return mot ? [mot] : [];
+}
 
 export default function ThuNghiemPhoiDoClient() {
   const searchParams = useSearchParams();
@@ -20,7 +30,7 @@ export default function ThuNghiemPhoiDoClient() {
   const [suKienId, setSuKienId] = useState<string | null>(searchParams.get('suKienId'));
   const [mauChinhId, setMauChinhId] = useState<string | null>(searchParams.get('mauChinhId'));
   const [mauPhuId, setMauPhuId] = useState<string | null>(searchParams.get('mauPhuId'));
-  const [phuKienId, setPhuKienId] = useState<string | null>(searchParams.get('phuKienId'));
+  const [phuKienIds, setPhuKienIds] = useState<string[]>(() => docPhuKienTuUrl(searchParams));
 
   const [ketQua, setKetQua] = useState<KetQuaKiemTra | null>(null);
   const [dangKiemTra, setDangKiemTra] = useState(false);
@@ -41,11 +51,22 @@ export default function ThuNghiemPhoiDoClient() {
   if (dangTai) return <p className="text-center py-12 text-ink-soft">Đang tải dữ liệu...</p>;
   if (loi || !danhMuc) return <p className="text-center py-12 text-lacquer">Đã xảy ra lỗi: {loi}</p>;
 
-  const trangPhucDangChon = danhMuc.trangPhuc.find((tp) => tp.id === trangPhucId) ?? null;
+  // Chụp lại thành const để dùng được trong các hàm khai báo bên dưới (TypeScript không giữ
+  // kết quả "danhMuc đã khác null" bên trong function declaration).
+  const tatCaMau = danhMuc.mauSac;
+  const tatCaTrangPhuc = danhMuc.trangPhuc;
+  const tatCaPhuKien = danhMuc.phuKien;
+
+  const trangPhucDangChon = tatCaTrangPhuc.find((tp) => tp.id === trangPhucId) ?? null;
   const suKienDangChon = danhMuc.suKien.find((sk) => sk.id === suKienId) ?? null;
-  const mauChinhDangChon = danhMuc.mauSac.find((m) => m.id === mauChinhId) ?? null;
-  const mauPhuDangChon = danhMuc.mauSac.find((m) => m.id === mauPhuId) ?? null;
-  const phuKienDangChon = danhMuc.phuKien.find((p) => p.id === phuKienId) ?? null;
+  const mauChinhDangChon = tatCaMau.find((m) => m.id === mauChinhId) ?? null;
+  const mauPhuDangChon = tatCaMau.find((m) => m.id === mauPhuId) ?? null;
+  // Giữ đúng thứ tự người dùng bấm chọn.
+  const cacPhuKienDangChon = phuKienIds
+    .map((id) => tatCaPhuKien.find((p) => p.id === id))
+    .filter((p): p is (typeof tatCaPhuKien)[number] => Boolean(p));
+  // Tương thích tạm: các nơi chưa hỗ trợ nhiều phụ kiện dùng món đầu tiên.
+  const phuKienDauTien = cacPhuKienDangChon[0] ?? null;
 
   const daChonDuDeXem = Boolean(trangPhucId && mauChinhId && mauPhuId);
 
@@ -54,6 +75,45 @@ export default function ThuNghiemPhoiDoClient() {
   const danhSachSuKien = danhMuc.suKien;
   // Đã có ảnh AI thì bỏ hình minh hoạ phác thảo phía trên, chỉ giữ ảnh AI.
   const coAnhAI = Boolean(toHop?.imageUrl);
+
+  // ===== Lọc màu + phụ kiện theo trang phục =====
+  const boMau = layBoMau(trangPhucDangChon?.ten);
+  const tenPhuKienChoPhep = layPhuKienChoPhep(trangPhucDangChon?.ten);
+
+  /**
+   * Tra theo tên (giữ đúng thứ tự khai báo); luôn giữ lại các mục người dùng đang chọn
+   * (vd: vào từ "Phối lại" ở Lookbook) để không làm mất dữ liệu.
+   */
+  function locTheoTen<T extends { id: string; ten: string }>(
+    nguon: T[],
+    tenCacMuc: string[],
+    idsDangChon: (string | null)[],
+  ): T[] {
+    const ketQuaLoc = tenCacMuc
+      .map((ten) => nguon.find((m) => chuanHoaTen(m.ten) === chuanHoaTen(ten)))
+      .filter((m): m is T => Boolean(m));
+    for (const id of idsDangChon) {
+      if (!id) continue;
+      const dangChon = nguon.find((m) => m.id === id);
+      if (dangChon && !ketQuaLoc.some((m) => m.id === dangChon.id)) ketQuaLoc.push(dangChon);
+    }
+    return ketQuaLoc;
+  }
+
+  const danhSachMauChinh = boMau ? locTheoTen(tatCaMau, boMau.chinh, [mauChinhId]) : [];
+  const danhSachMauPhu = boMau ? locTheoTen(tatCaMau, boMau.phu, [mauPhuId]) : [];
+  const danhSachPhuKienHienThi = trangPhucDangChon ? tatCaPhuKien : [];
+
+  function timIdMauTheoTen(ten: string): string | null {
+    return tatCaMau.find((m) => chuanHoaTen(m.ten) === chuanHoaTen(ten))?.id ?? null;
+  }
+
+  function mauThuocDanhSach(idMau: string | null, tenCacMau: string[]): boolean {
+    if (!idMau) return false;
+    const mau = tatCaMau.find((m) => m.id === idMau);
+    if (!mau) return false;
+    return tenCacMau.some((ten) => chuanHoaTen(ten) === chuanHoaTen(mau.ten));
+  }
 
   function datLaiKetQua() {
     idYeuCau.current += 1;
@@ -76,6 +136,55 @@ export default function ThuNghiemPhoiDoClient() {
     };
   }
 
+  /**
+   * Bấm 1 phụ kiện:
+   * - đang chọn -> bỏ chọn;
+   * - chưa chọn -> thêm vào; nếu nhóm của nó là "chỉ chọn 1" thì bỏ các món khác cùng nhóm.
+   */
+  function xuLyBatTatPhuKien(id: string) {
+    const phuKien = tatCaPhuKien.find((p) => p.id === id);
+    if (!phuKien) return;
+
+    setPhuKienIds((truoc) => {
+      if (truoc.includes(id)) return truoc.filter((x) => x !== id);
+
+      const nhom = layNhomCuaPhuKien(phuKien.ten);
+      let giuLai = truoc;
+      if (nhom?.chiChonMot) {
+        giuLai = truoc.filter((x) => {
+          const pk = tatCaPhuKien.find((p) => p.id === x);
+          return !pk || layNhomCuaPhuKien(pk.ten)?.ten !== nhom.ten;
+        });
+      }
+      return [...giuLai, id];
+    });
+    datLaiKetQua();
+  }
+
+
+          /**
+   * Đổi trang phục:
+   * - màu cũ còn hợp lệ thì giữ, không thì đặt về màu mặc định;
+   * - phụ kiện giữ nguyên (món ít phù hợp sẽ bị Lớp 1 cảnh báo).
+   */
+  function xuLyChonTrangPhuc(id: string) {
+    setTrangPhucId(id);
+    const trangPhucMoi = tatCaTrangPhuc.find((tp) => tp.id === id);
+
+    const boMauMoi = layBoMau(trangPhucMoi?.ten);
+    if (boMauMoi) {
+      if (!mauThuocDanhSach(mauChinhId, boMauMoi.chinh)) {
+        setMauChinhId(timIdMauTheoTen(boMauMoi.macDinhChinh));
+      }
+      if (!mauThuocDanhSach(mauPhuId, boMauMoi.phu)) {
+        setMauPhuId(timIdMauTheoTen(boMauMoi.macDinhPhu));
+      }
+    }
+
+    datLaiKetQua();
+  }
+
+
   async function xuLyXemKetQua() {
     if (!trangPhucId || !mauChinhId || !mauPhuId) return;
     const idHienTai = ++idYeuCau.current;
@@ -97,7 +206,14 @@ export default function ThuNghiemPhoiDoClient() {
       const res = await fetch('/api/kiem-tra-phoi-do', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ trangPhucId, mauChinhId, mauPhuId, phuKienId, suKienId: suKienDung }),
+        // TẠM THỜI: server vẫn đọc `phuKienId` (món đầu tiên). `phuKienIds` gửi sẵn cho bước nâng cấp server.
+        body: JSON.stringify({
+          trangPhucId,
+          mauChinhId,
+          mauPhuId,
+          phuKienIds,
+          suKienId: suKienDung,
+        }),
       });
       const body = await res.json();
       if (!res.ok) throw new Error(body.error ?? `Máy chủ trả về lỗi ${res.status}`);
@@ -124,7 +240,16 @@ export default function ThuNghiemPhoiDoClient() {
       const res = await fetch('/api/to-hop-duoc-duyet', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ trangPhucId, mauChinhId, mauPhuId, phuKienId, suKienId: suKienDung, sinhLai }),
+        // TẠM THỜI: như trên, server vẫn dùng `phuKienId`.
+        body: JSON.stringify({
+          trangPhucId,
+          mauChinhId,
+          mauPhuId,
+          phuKienId: phuKienDauTien?.id ?? null,
+          phuKienIds,
+          suKienId: suKienDung,
+          sinhLai,
+        }),
       });
       const body = await res.json();
       if (!res.ok) throw new Error(body.error ?? `Lỗi API (HTTP ${res.status})`);
@@ -163,7 +288,8 @@ export default function ThuNghiemPhoiDoClient() {
         suKienNgauNhien: suKienNgauNhien !== null,
         mauChinhId,
         mauPhuId,
-        phuKienId,
+         phuKienId: phuKienDauTien?.id ?? null,
+        phuKienIds,
         ketQuaKiemTra: ketQua,
         imageUrl: toHop.imageUrl,
         toHopId: toHop.id,
@@ -204,7 +330,8 @@ export default function ThuNghiemPhoiDoClient() {
       suKienNgauNhien: suKienNgauNhien !== null,
       mauChinhId,
       mauPhuId,
-      phuKienId,
+      phuKienId: phuKienDauTien?.id ?? null,
+      phuKienIds,
       ketQuaKiemTra: ketQua,
     });
     setDaLuu(true);
@@ -216,52 +343,53 @@ export default function ThuNghiemPhoiDoClient() {
       suKien: suKienHieuLuc,
       mauChinh: mauChinhDangChon,
       mauPhu: mauPhuDangChon,
-      phuKien: phuKienDangChon,
+      cacPhuKien: cacPhuKienDangChon,
     });
     if (!noiDung) return;
     const thanhCong = await saoChepChiaSe(noiDung);
     setDaSaoChep(thanhCong);
   }
 
-    return (
-    <main className="max-w-6xl mx-auto px-4 py-8">
-      <h1 className="font-display text-2xl font-semibold mb-6">Thử nghiệm phối đồ</h1>
+  return (
+    // Trên màn hình lớn: cả trang cao đúng bằng cửa sổ trình duyệt (h-dvh), không cuộn cả trang.
+    <main className="max-w-6xl mx-auto w-full px-4 py-4 flex flex-col lg:h-dvh">
+      <h1 className="font-display text-xl lg:text-2xl font-semibold mb-3 shrink-0">Thử nghiệm phối đồ</h1>
 
-      <div className="grid grid-cols-1 lg:grid-cols-[280px_1fr_300px] gap-6 items-start">
+      <div className="grid grid-cols-1 lg:grid-cols-[280px_minmax(0,1fr)_300px] lg:grid-rows-[minmax(0,1fr)] gap-6 lg:flex-1 lg:min-h-0">
         {/* Cột trái: Chọn trang phục & bối cảnh */}
-        <aside className="space-y-8">
+        <aside className="space-y-8 lg:min-h-0 lg:overflow-y-auto p-1">
           <ChonTrangPhuc
             danhSachTrangPhuc={danhMuc.trangPhuc}
             danhSachSuKien={danhMuc.suKien}
             trangPhucDangChon={trangPhucId}
             suKienDangChon={suKienId}
-            onChonTrangPhuc={boc(setTrangPhucId)}
+            onChonTrangPhuc={xuLyChonTrangPhuc}
             onChonSuKien={boc(setSuKienId)}
           />
         </aside>
 
-        {/* Cột giữa: Khu xem trước + kết quả thẩm định */}
-        <section className="bg-paper-raised rounded-md flex flex-col min-h-100">
+        {/* Cột giữa: Khu xem trước (co giãn theo khung) + nút thẩm định luôn nằm cuối */}
+        <section className="bg-paper-raised rounded-md flex flex-col lg:min-h-0 lg:overflow-y-auto">
           {/* Có ảnh AI rồi thì xoá phần hình minh hoạ phác thảo ở trên */}
           {!coAnhAI && (
-            <div className="flex-1">
+            <div className="relative flex-1 min-h-105 lg:min-h-75">
               <XemTruoc
                 trangPhuc={trangPhucDangChon}
                 mauChinh={mauChinhDangChon}
                 mauPhu={mauPhuDangChon}
-                phuKien={phuKienDangChon}
+                cacPhuKien={cacPhuKienDangChon}
               />
             </div>
           )}
 
           {!daChonDuDeXem && trangPhucId && (
-            <p className="p-4 border-t border-ink-soft/15 text-sm text-ink-soft text-center">
+            <p className="p-4 border-t border-ink-soft/15 text-sm text-ink-soft text-center shrink-0">
               Chọn thêm màu chính và màu phụ để xem kết quả phối đồ.
             </p>
           )}
 
           {daChonDuDeXem && !ketQua && (
-            <div className="p-4 border-t border-ink-soft/15">
+            <div className="p-4 border-t border-ink-soft/15 shrink-0">
               {loiKiemTra && <p className="text-sm text-lacquer mb-2">{loiKiemTra}</p>}
               <button
                 onClick={xuLyXemKetQua}
@@ -284,7 +412,10 @@ export default function ThuNghiemPhoiDoClient() {
                 thieuThongTin: !suKienHieuLuc,
                 tenSuKien: suKienHieuLuc?.ten ?? null,
                 suKienNgauNhien: suKienNgauNhien !== null,
-                tenPhuKien: phuKienDangChon?.ten ?? null,
+                tenPhuKien:
+                  cacPhuKienDangChon.length > 0
+                    ? cacPhuKienDangChon.map((p) => p.ten).join(', ')
+                    : null,
                 dangSinh: dangSinhAnh,
                 loi: loiAnh,
                 toHop,
@@ -299,18 +430,23 @@ export default function ThuNghiemPhoiDoClient() {
         </section>
 
         {/* Cột phải: Tùy chỉnh màu sắc & phụ kiện */}
-        <aside className="space-y-8">
+        <aside className="space-y-6 lg:min-h-0 lg:overflow-y-auto p-1">
           <BangMau
-            danhSachMau={danhMuc.mauSac}
+            danhSachMauChinh={danhSachMauChinh}
+            danhSachMauPhu={danhSachMauPhu}
             mauChinhDangChon={mauChinhId}
             mauPhuDangChon={mauPhuId}
+            daChonTrangPhuc={Boolean(trangPhucDangChon)}
             onChonMauChinh={boc(setMauChinhId)}
             onChonMauPhu={boc(setMauPhuId)}
           />
-          <ChonPhuKien
-            danhSachPhuKien={danhMuc.phuKien}
-            phuKienDangChon={phuKienId}
-            onChonPhuKien={boc(setPhuKienId)}
+           <ChonPhuKien
+            danhSachPhuKien={danhSachPhuKienHienThi}
+            tenPhuKienPhuHop={tenPhuKienChoPhep ?? []}
+            tenTrangPhuc={trangPhucDangChon?.ten ?? null}
+            phuKienDangChon={phuKienIds}
+            daChonTrangPhuc={Boolean(trangPhucDangChon)}
+            onBatTatPhuKien={xuLyBatTatPhuKien}
           />
         </aside>
       </div>

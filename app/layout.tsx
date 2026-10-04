@@ -25,7 +25,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
     <html lang="vi" className={`${fraunces.variable} ${beVietnamPro.variable} h-full antialiased`}>
       <body className="min-h-full flex">
         <Sidebar />
-        <div className="flex-1">{children}</div>
+        <div className="flex-1 min-w-0">{children}</div>
       </body>
     </html>
   );

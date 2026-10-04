@@ -24,26 +24,72 @@ async function main() {
     data: { ten: 'Áo bà ba', vungMien: 'Nam Bộ', doiTuong: 'Nam & Nữ' },
   });
 
-  // 2. Nội dung văn hóa (kèm nguồn tham khảo)
+  // 2. Nội dung văn hóa (E1 - nguồn: tài liệu "Việt phục - Remix", TRẠNG THÁI: chờ rà soát nội bộ)
+  // TODO(E1): các mục có ghi "cần tra cứu link" phải xác nhận nguồn thật trước khi nộp bài.
   await prisma.noiDungVanHoa.createMany({
     data: [
+      // ----- Áo dài -----
       {
         trangPhucId: aoDai.id,
         tieuDe: 'Nguồn gốc Áo dài',
-        noiDung: 'Áo dài hiện đại định hình từ thế kỷ 20, biến hoá từ áo ngũ thân, hai tà xẻ dài đến gót.',
-        nguonThamKhao: 'Bảo tàng Phụ nữ Việt Nam',
+        noiDung:
+          'Tiền thân của áo dài Việt Nam được nhiều nhà nghiên cứu đồng thuận là chiếc áo tứ thân, trang phục quen thuộc của phụ nữ nông thôn Bắc Bộ xưa. Theo nhà nghiên cứu Trịnh Bách, áo tứ thân (mở dọc giữa hai vạt trước) có sự tương đồng với áo "Bối tử" từ triều Minh (Trung Quốc), nhưng đã được phụ nữ Việt cải biên vạt ngắn hơn để tiện lao động và thêm cổ đứng che tóc. Tuy nhiên, ông cũng nhấn mạnh rằng người Việt không dễ dàng tiếp nhận văn hóa ngoại lai trong thời kỳ kháng chiến, và chiếc áo dài đã được người Việt sáng tạo với những nét độc đáo riêng, đưa nó vươn tầm quốc tế.',
+        nguonThamKhao:
+          'Cổng TTĐT Hội Liên hiệp Phụ nữ Việt Nam (Nghiên cứu của Trịnh Bách) / Tạp chí Nghiên cứu và Phát triển',
       },
+      {
+        trangPhucId: aoDai.id,
+        tieuDe: 'Sự hình thành Áo ngũ thân',
+        noiDung:
+          'Áo ngũ thân xuất hiện từ năm 1744 gắn liền với cuộc cải cách trang phục ở Đàng Trong do chúa Nguyễn Phúc Khoát khởi xướng, nhằm tạo sự phân biệt với Đàng Ngoài. Trang phục này được may từ 5 mảnh vải, với 2 thân trước, 2 thân sau và 1 thân con ẩn bên phải. Đến đầu thế kỷ 19, dưới thời Hoàng đế Minh Mạng, áo ngũ thân tiếp tục được chọn làm trang phục chung và trở thành Quốc phục phổ biến trên cả nước từ năm 1837 đến 1945.',
+        nguonThamKhao: 'Nghiên cứu Lịch sử Áo dài (Đại học Văn Hiến) / Kỷ yếu áo dài ngũ thân',
+      },
+      {
+        trangPhucId: aoDai.id,
+        tieuDe: 'Ý nghĩa văn hóa của Áo ngũ thân',
+        noiDung:
+          'Áo ngũ thân mang đậm triết lý sống của người Việt, trong đó bốn thân ngoài tượng trưng cho "tứ thân phụ mẫu" (cha mẹ ruột và cha mẹ chồng/vợ), còn thân áo nhỏ bên trong đại diện cho chính bản thân người mặc. Đặc biệt, chiếc áo luôn có 5 khuy cài tượng trưng cho "ngũ luân" (vua tôi, cha con, vợ chồng, anh em, bạn bè) và "ngũ thường" (Nhân - Lễ - Nghĩa - Trí - Tín) trong đạo đức Á Đông. Mặc áo ngũ thân được xem như mang trên mình đạo làm người và giữ gìn sự nền nã, chuẩn mực.',
+        nguonThamKhao: 'Bảo tàng Áo dài / Nghiên cứu Văn hóa Việt Nam',
+      },
+
+      // ----- Áo tứ thân -----
       {
         trangPhucId: aoTuThan.id,
         tieuDe: 'Nguồn gốc Áo tứ thân',
-        noiDung: 'Gồm hai tà trước buông thả, hai tà sau may liền, gắn liền với hát quan họ Kinh Bắc.',
-        nguonThamKhao: 'Trung tâm Bảo tồn Di sản Quan họ Bắc Ninh',
+        noiDung:
+          'Áo tứ thân là trang phục gắn liền với đời sống của người phụ nữ nông thôn Bắc Bộ xưa, đặc biệt phổ biến trước thế kỷ 20. Theo nhiều nhà nghiên cứu, chiếc áo này có thể bắt nguồn từ trang phục của phụ nữ thời Lý – Trần, nhưng được cải tiến qua thời gian để phù hợp hơn với việc đồng áng. Tuy không có tài liệu ghi chép chính xác mốc thời gian xuất hiện, áo tứ thân luôn được công nhận là biểu tượng của vẻ đẹp mộc mạc, chất phác, phản ánh đậm nét văn hóa lúa nước của vùng Kinh Bắc.',
+        nguonThamKhao:
+          'Sách "Ngàn năm áo mũ" (Trần Quang Đức) / Trung tâm Bảo tồn Di sản Quan họ Bắc Ninh',
       },
+      {
+        trangPhucId: aoTuThan.id,
+        tieuDe: 'Cấu tạo và đặc điểm',
+        noiDung:
+          'Về thiết kế, áo tứ thân không có khuy cài, gồm hai vạt trước để buông thõng hoặc buộc chéo trước bụng, và hai vạt sau may liền lại với nhau tạo thành một sống áo chạy dọc lưng. Thiết kế xẻ tà mở ở phía trước kết hợp cùng chiếc yếm đào bên trong, váy đụp đen và thắt lưng lụa không chỉ tạo sự thoải mái khi làm việc mà còn tôn lên vẻ duyên dáng kín đáo. Trang phục này thường đi kèm với khăn mỏ quạ và nón quai thao trong các dịp lễ hội.',
+        nguonThamKhao: 'Bảo tàng Phụ nữ Việt Nam / Tạp chí Di sản Văn hóa',
+      },
+      {
+        trangPhucId: aoTuThan.id,
+        tieuDe: 'Ý nghĩa biểu tượng',
+        noiDung:
+          'Ngoài giá trị thẩm mỹ, áo tứ thân mang nhiều tầng ý nghĩa đạo lý sâu sắc. Bốn tà áo được cho là tượng trưng cho tứ thân phụ mẫu (cha mẹ ruột và cha mẹ chồng), thể hiện đạo hiếu của người phụ nữ. Sống áo phía sau được ghép từ hai vạt áo tượng trưng cho sự gắn bó sắt son của tình nghĩa vợ chồng. Một số biến thể về sau có hàng khuy, thường là 5 chiếc, đại diện cho ngũ thường: Nhân, Nghĩa, Lễ, Trí, Tín.',
+        nguonThamKhao: 'Báo Văn hóa / Viện Nghiên cứu Văn hóa',
+      },
+
+      // ----- Áo bà ba -----
       {
         trangPhucId: aoBaBa.id,
         tieuDe: 'Nguồn gốc Áo bà ba',
-        noiDung: 'Trang phục đặc trưng Nam Bộ, form dáng đơn giản, thoáng mát, phù hợp khí hậu sông nước.',
-        nguonThamKhao: 'Bảo tàng Lịch sử Việt Nam - TP.HCM',
+        noiDung:
+          'Áo bà ba là trang phục mang đậm dấu ấn văn hóa của người dân Nam Bộ. Về xuất xứ, hiện chưa có tài liệu nói rõ nguồn gốc chính xác của áo bà ba xuất hiện vào thời điểm nào, và đây chỉ là một trong các giả thuyết được ghi nhận. Một số nhà nghiên cứu, tiêu biểu như nhà văn Sơn Nam, cho rằng kiểu áo này có thể được du nhập từ đảo Penang (Malaysia) vào khoảng nửa cuối thế kỷ 19, sau đó được người Việt cách tân, xẻ tà, thêm túi để phù hợp với điều kiện lao động và khí hậu miền sông nước.',
+        nguonThamKhao: 'Sách "Đất Gia Định xưa" (Sơn Nam) / Tạp chí Nghiên cứu Lịch sử',
+      },
+      {
+        trangPhucId: aoBaBa.id,
+        tieuDe: 'Đặc điểm và tính ứng dụng',
+        noiDung:
+          'Khác với sự cầu kỳ của nhiều trang phục truyền thống khác, áo bà ba được thiết kế tối giản: không có cổ áo, thân áo may bằng vải mềm, xẻ tà hai bên hông và thường có hai túi to ở vạt trước. Thiết kế mở này đặc biệt tiện lợi cho việc đồng áng, chèo xuồng và sinh hoạt hàng ngày của người nông dân. Qua thời gian, chiếc áo bà ba không chỉ là món đồ mặc thường ngày mà đã trở thành biểu tượng cho vẻ đẹp mộc mạc, đôn hậu và kiên cường của người phụ nữ Nam Bộ.',
+        nguonThamKhao: 'Bảo tàng Phụ nữ Nam Bộ / Cổng thông tin điện tử Sở Văn hóa',
       },
     ],
   });
