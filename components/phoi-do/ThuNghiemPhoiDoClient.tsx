@@ -371,15 +371,45 @@ export default function ThuNghiemPhoiDoClient() {
         {/* Cột giữa: Khu xem trước (co giãn theo khung) + nút thẩm định luôn nằm cuối */}
         <section className="bg-paper-raised rounded-md flex flex-col lg:min-h-0 lg:overflow-y-auto">
           {/* Có ảnh AI rồi thì xoá phần hình minh hoạ phác thảo ở trên */}
-          {!coAnhAI && (
-            <div className="relative flex-1 min-h-105 lg:min-h-75">
-              <XemTruoc
-                trangPhuc={trangPhucDangChon}
-                mauChinh={mauChinhDangChon}
-                mauPhu={mauPhuDangChon}
-                cacPhuKien={cacPhuKienDangChon}
-              />
-            </div>
+                    {!coAnhAI && (
+            <>
+              <div className="relative flex-1 min-h-105 lg:min-h-75">
+                <XemTruoc
+                  trangPhuc={trangPhucDangChon}
+                  mauChinh={mauChinhDangChon}
+                  mauPhu={mauPhuDangChon}
+                  cacPhuKien={cacPhuKienDangChon}
+                />
+              </div>
+
+              {trangPhucDangChon && (
+                <div className="shrink-0 flex flex-wrap items-center justify-center gap-1.5 px-4 pb-3 text-xs">
+                  <span className="rounded-full bg-ink px-2.5 py-1 font-medium text-paper">
+                    {trangPhucDangChon.ten}
+                  </span>
+                  {[mauChinhDangChon, mauPhuDangChon].map(
+                    (m) =>
+                      m && (
+                        <span
+                          key={m.id}
+                          className="inline-flex items-center gap-1.5 rounded-full border border-ink-soft/20 px-2.5 py-1"
+                        >
+                          <span
+                            className="h-3 w-3 rounded-full border border-ink-soft/20"
+                            style={{ backgroundColor: m.maHex }}
+                          />
+                          {m.ten}
+                        </span>
+                      ),
+                  )}
+                  {cacPhuKienDangChon.map((p) => (
+                    <span key={p.id} className="rounded-full border border-ink-soft/20 px-2.5 py-1">
+                      {p.ten}
+                    </span>
+                  ))}
+                </div>
+              )}
+            </>
           )}
 
           {!daChonDuDeXem && trangPhucId && (

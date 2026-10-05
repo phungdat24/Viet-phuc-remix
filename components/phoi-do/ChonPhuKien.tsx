@@ -87,17 +87,18 @@ export default function ChonPhuKien({
                 {nhom.danhSach.map((pk) => {
                   const dangChon = phuKienDangChon.includes(pk.id);
                   return (
-                    <button
+                      <button
                       key={pk.id}
                       type="button"
                       aria-pressed={dangChon}
                       onClick={() => onBatTatPhuKien(pk.id)}
                       className={`rounded-md border px-2 py-2 text-xs text-center transition ${
                         dangChon
-                          ? 'border-lacquer bg-paper-raised'
-                          : 'border-ink-soft/20 hover:border-gold'
+                          ? 'border-lacquer bg-lacquer/10 font-medium text-ink shadow-sm'
+                          : 'border-ink-soft/20 bg-paper-raised/60 hover:border-gold hover:bg-paper-raised'
                       }`}
                     >
+                      {dangChon && <span aria-hidden>✓ </span>}
                       {pk.ten}
                     </button>
                   );
