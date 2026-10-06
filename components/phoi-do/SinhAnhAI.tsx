@@ -12,6 +12,8 @@ export interface AnhAIProps {
   suKienNgauNhien: boolean;
   /** null = không chọn phụ kiện. */
   tenPhuKien: string | null;
+  /** Cảnh báo sai phạm văn hoá (hiện khung đỏ dưới ảnh). null = không có cảnh báo. */
+  canhBaoVanHoa?: string | null;
   dangSinh: boolean;
   loi: string | null;
   toHop: ToHopAI | null;
@@ -27,6 +29,7 @@ export default function SinhAnhAI({
   tenSuKien,
   suKienNgauNhien,
   tenPhuKien,
+  canhBaoVanHoa = null,
   dangSinh,
   loi,
   toHop,
@@ -101,6 +104,16 @@ export default function SinhAnhAI({
         <p className="text-sm text-ink-soft italic">“{toHop.aiAssessment.nhanXetAI}”</p>
       )}
 
+      {canhBaoVanHoa && (
+        <div
+          role="alert"
+          className="rounded-md border border-lacquer/40 bg-lacquer/10 p-3 text-sm text-lacquer"
+        >
+          <p className="font-semibold">⚠ Cảnh báo văn hoá</p>
+          <p>{canhBaoVanHoa}</p>
+        </div>
+      )}
+
       {loi && <p className="text-sm text-lacquer bg-lacquer/10 rounded-md p-3">{loi}</p>}
 
       {biTuChoi ? (
@@ -142,6 +155,16 @@ export default function SinhAnhAI({
               </button>
             )}
           </div>
+          {/* Ảnh đã duyệt thì server không cho ghi đè; còn lại (draft) được phép sinh ảnh khác. */}
+          {!daDuyet && (
+            <button
+              onClick={onSinhLai}
+              disabled={dangDuyet}
+              className="w-full border border-ink-soft/30 font-medium py-2 rounded-md hover:border-gold transition disabled:opacity-60"
+            >
+              Sinh ảnh khác
+            </button>
+          )}
         </>
       )}
     </div>

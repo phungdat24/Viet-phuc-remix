@@ -100,7 +100,14 @@ export default function KetQuaPhoiDo({ ketQua, daLuu, daSaoChep, onLuu, onChiaSe
         )}
       </DongKetQua>
 
-      <SinhAnhAI {...anhAI} />
+      <SinhAnhAI
+        {...anhAI}
+        canhBaoVanHoa={
+          phuHopVanHoa.canhBao
+            ? (phuHopVanHoa.lyDo ?? 'Tổ hợp này có thể làm sai lệch đặc trưng văn hoá gốc.')
+            : null
+        }
+      />
 
       <div className="flex gap-2 mt-3">
         {/* Khi có ảnh AI thì việc lưu Lookbook đi qua bước duyệt ở trên;

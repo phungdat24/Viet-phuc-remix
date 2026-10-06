@@ -34,8 +34,8 @@ export interface DauVaoSinhAnh {
   hexMauChinh: string;
   tenMauPhu: string;
   hexMauPhu: string;
-  /** null = người dùng không chọn phụ kiện → ảnh không kèm phụ kiện. */
-  tenPhuKien: string | null;
+   /** Rỗng = người dùng không chọn phụ kiện → ảnh không kèm phụ kiện. */
+  tenCacPhuKien: string[];
   tenSuKien: string;
 }
 
@@ -76,12 +76,14 @@ const MO_TA_PHU_KIEN: Record<string, string> = {
   "Khăn rằn": "a checkered Southern Vietnamese scarf (khăn rằn) worn around the neck",
 };
 
-function moTaPhuKien(ten: string | null): string {
-  if (!ten) {
+function moTaPhuKien(cacTen: string[]): string {
+  if (cacTen.length === 0) {
     return "No accessories at all: no hat, no headwear, no scarf, nothing held in the hands, plain simple footwear.";
   }
-  const moTa = MO_TA_PHU_KIEN[ten] ?? `the accessory "${ten}" worn or held in a natural way`;
-  return `Accessory that MUST be clearly visible: ${moTa}.`;
+  const cacMoTa = cacTen.map((ten) => MO_TA_PHU_KIEN[ten] ?? `the accessory "${ten}" worn or held in a natural way`);
+  return cacMoTa.length === 1
+    ? `Accessory that MUST be clearly visible: ${cacMoTa[0]}.`
+    : `ALL of these ${cacMoTa.length} accessories MUST be clearly visible at the same time: ${cacMoTa.join("; ")}.`;
 }
 
 function taoPromptAnh(input: DauVaoSinhAnh): string {
@@ -97,7 +99,7 @@ function taoPromptAnh(input: DauVaoSinhAnh): string {
     `styled as a modern Gen Z remix while respecting the original silhouette.`,
     `Main color: ${input.tenMauChinh} (${input.hexMauChinh}).`,
     `Accent color: ${input.tenMauPhu} (${input.hexMauPhu}).`,
-    moTaPhuKien(input.tenPhuKien),
+    moTaPhuKien(input.tenCacPhuKien),
     `Setting mood for the occasion: ${input.tenSuKien}.`,
     `Soft natural studio lighting, plain minimal background, outfit as the clear focal point,`,
     `no text or logo in the image, photorealistic.`,
@@ -110,7 +112,9 @@ function taoPromptDanhGia(input: DauVaoSinhAnh): string {
     `tiếng Việt về sự hài hòa của tổ hợp phối đồ sau, theo phong cách Gen Z`,
     `remix trang phục truyền thống Việt Nam: trang phục "${input.tenTrangPhuc}",`,
     `màu chính "${input.tenMauChinh}", màu phụ "${input.tenMauPhu}",`,
-    input.tenPhuKien ? `phụ kiện "${input.tenPhuKien}",` : `không dùng phụ kiện,`,
+    input.tenCacPhuKien.length > 0
+      ? `phụ kiện ${input.tenCacPhuKien.map((t) => `"${t}"`).join(", ")},`
+      : `không dùng phụ kiện,`,
     `dịp "${input.tenSuKien}". Chỉ trả về đúng đoạn nhận`,
     `xét, không thêm lời dẫn hay giải thích.`,
   ].join(" ");
@@ -159,23 +163,30 @@ const CF_API_TOKEN = process.env.CLOUDFLARE_API_TOKEN?.trim();
   return json.result as T;
 }
 
+/**
+ * Chỉ sinh nhận xét (không sinh ảnh). Dùng cho ảnh tự tạo (nạp qua scripts/nap-anh.ts)
+ * và để bổ sung nhận xét cho các bản ghi cũ còn thiếu. Trả về null nếu lượt gọi lỗi.
+ */
+export async function sinhNhanXet(input: DauVaoSinhAnh): Promise<string | null> {
+  try {
+    const ketQuaVanBan = await goiCloudflareAI<{ response: string }>(MODEL_VAN_BAN, {
+      messages: [{ role: "user", content: taoPromptDanhGia(input) }],
+    });
+    return ketQuaVanBan.response?.trim() || null;
+  } catch (err) {
+    console.error("[sinhNhanXet] Lượt gọi đánh giá text lỗi (bỏ qua):", err);
+    return null;
+  }
+}
+
 export async function sinhAnhVaDanhGia(input: DauVaoSinhAnh): Promise<KetQuaSinhAnh> {
   // 1. Sinh ảnh — bắt buộc phải thành công, lỗi thì ném ra ngay.
   const ketQuaAnh = await goiCloudflareAI<{ image: string }>(MODEL_ANH, {
     prompt: taoPromptAnh(input),
   });
 
-  // 2. Sinh nhận xét — không bắt buộc, lỗi thì bỏ qua (vẫn giữ ảnh đã sinh),
-  //    tránh lãng phí 1 lượt gọi ảnh chỉ vì lượt gọi text bị lỗi vặt.
-  let nhanXetAI: string | null = null;
-  try {
-    const ketQuaVanBan = await goiCloudflareAI<{ response: string }>(MODEL_VAN_BAN, {
-      messages: [{ role: "user", content: taoPromptDanhGia(input) }],
-    });
-    nhanXetAI = ketQuaVanBan.response?.trim() || null;
-  } catch (err) {
-    console.error("[sinhAnhVaDanhGia] Lượt gọi đánh giá text lỗi (bỏ qua, vẫn giữ ảnh):", err);
-  }
+  // 2. Sinh nhận xét — không bắt buộc, lỗi thì bỏ qua (vẫn giữ ảnh đã sinh).
+  const nhanXetAI = await sinhNhanXet(input);
 
   return {
     anhDataUri: `data:image/jpeg;base64,${ketQuaAnh.image}`,
