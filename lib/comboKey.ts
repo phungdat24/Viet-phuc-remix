@@ -47,6 +47,26 @@ export interface ThanhPhanComboKey {
 
 const DELIMITER = ":";
 
+/** Dấu nối nhiều phụ kiện trong cùng 1 thành phần phuKienId (uuid không chứa "+"). */
+export const PHU_KIEN_NOI = "+";
+
+/**
+ * Gộp danh sách phụ kiện thành 1 giá trị phuKienId cho comboKey.
+ * - Rỗng -> PHU_KIEN_KHONG_CHON.
+ * - 1 món -> chính id đó (giữ nguyên comboKey của ảnh cũ/ảnh nạp tay).
+ * - Nhiều món -> id sắp xếp rồi nối bằng "+", nên thứ tự bấm chọn không làm đổi tổ hợp.
+ */
+export function gopPhuKienId(ids: string[]): string {
+  const sach = Array.from(new Set(ids.filter(Boolean))).sort();
+  return sach.length === 0 ? PHU_KIEN_KHONG_CHON : sach.join(PHU_KIEN_NOI);
+}
+
+/** Tách phuKienId (đã gộp) về danh sách id; "khong-phu-kien" -> []. */
+export function tachPhuKienId(phuKienId: string): string[] {
+  if (!phuKienId || phuKienId === PHU_KIEN_KHONG_CHON) return [];
+  return phuKienId.split(PHU_KIEN_NOI).filter(Boolean);
+}
+
 /** Tạo comboKey từ 5 thành phần bắt buộc. Ném lỗi nếu thiếu trường nào. */
 export function taoComboKey(input: ThanhPhanComboKey): string {
   const thuTu: (keyof ThanhPhanComboKey)[] = [

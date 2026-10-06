@@ -241,7 +241,7 @@ export default function ThuNghiemPhoiDoClient() {
       const res = await fetch('/api/to-hop-duoc-duyet', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        // TẠM THỜI: như trên, server vẫn dùng `phuKienId`.
+        // Server dùng `phuKienIds` (toàn bộ phụ kiện) để tạo comboKey; `phuKienId` chỉ để tương thích.
         body: JSON.stringify({
           trangPhucId,
           mauChinhId,
@@ -253,7 +253,10 @@ export default function ThuNghiemPhoiDoClient() {
         }),
       });
       const body = await res.json();
-      if (!res.ok) throw new Error(body.error ?? `Lỗi API (HTTP ${res.status})`);
+      if (!res.ok) {
+        if (body.chiTiet) console.error('[sinh ảnh AI] chi tiết lỗi từ server:', body.chiTiet);
+        throw new Error(body.error ?? `Lỗi API (HTTP ${res.status})`);
+      }
       if (idHienTai !== idYeuCau.current) return;
       setToHop(body.data);
     } catch (err) {
@@ -307,15 +310,12 @@ export default function ThuNghiemPhoiDoClient() {
   }
 
   /**
-   * Người dùng không chọn lưu ảnh.
+   * Người dùng bấm "Không lưu": bỏ kết quả + ảnh AI vừa sinh và quay về mô hình 2D ban đầu
+   * (giữ nguyên các lựa chọn trang phục/màu/phụ kiện để họ chỉnh tiếp).
    * Không cập nhật trạng thái duyệt trong database.
    */
   function xuLyKhongDuyetAnh() {
-    if (!toHop) return;
-
-    setLoiAnh(
-      "Bạn chưa lưu ảnh này. Có thể chọn Sinh ảnh khác để thử lại."
-    );
+    datLaiKetQua();
   }
 
   function xuLySinhLaiAnh() {
