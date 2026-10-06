@@ -1,5 +1,6 @@
 'use client';
 
+import type { ReactNode } from 'react';
 import type { TrangPhuc, SuKien } from '@/types/phoi-do';
 
 interface Props {
@@ -8,8 +9,13 @@ interface Props {
   trangPhucDangChon: string | null;
   suKienDangChon: string | null;
   onChonTrangPhuc: (id: string) => void;
-  onChonSuKien: (id: string) => void;
+  /** Truyền null khi người dùng bấm lại dịp đang chọn để bỏ chọn. */
+  onChonSuKien: (id: string | null) => void;
+  /** Khối giới thiệu văn hoá, hiện ngay dưới các nút trang phục. */
+  phanGioiThieu?: ReactNode;
 }
+
+const TIEU_DE = 'font-display text-sm font-semibold text-ink-soft uppercase tracking-wide mb-3';
 
 export default function ChonTrangPhuc({
   danhSachTrangPhuc,
@@ -18,49 +24,58 @@ export default function ChonTrangPhuc({
   suKienDangChon,
   onChonTrangPhuc,
   onChonSuKien,
+  phanGioiThieu,
 }: Props) {
   return (
     <div className="space-y-6">
       <div>
-        <h3 className="font-display text-sm font-semibold text-ink-soft uppercase tracking-wide mb-3">
-          Trang phục
-        </h3>
-        <div className="grid grid-cols-3 gap-3">
-          {danhSachTrangPhuc.map((tp) => (
-            <button
-              key={tp.id}
-              onClick={() => onChonTrangPhuc(tp.id)}
-              className={`aspect-square rounded-md border-2 flex flex-col items-center justify-center text-center p-2 transition ${
-                trangPhucDangChon === tp.id
-                  ? 'border-lacquer bg-paper-raised'
-                  : 'border-transparent bg-paper-raised/50 hover:border-gold'
-              }`}
-            >
-              <span className="text-sm font-medium">{tp.ten}</span>
-              <span className="text-xs text-ink-soft mt-1">{tp.vungMien}</span>
-            </button>
-          ))}
+        <h3 className={TIEU_DE}>Trang phục</h3>
+        <div className="grid grid-cols-3 gap-2">
+          {danhSachTrangPhuc.map((tp) => {
+            const chon = trangPhucDangChon === tp.id;
+            return (
+              <button
+                key={tp.id}
+                type="button"
+                aria-pressed={chon}
+                onClick={() => onChonTrangPhuc(tp.id)}
+                className={`rounded-md border-2 px-2 py-3 text-center transition ${
+                  chon
+                    ? 'border-lacquer bg-paper-raised'
+                    : 'border-transparent bg-paper-raised/70 hover:border-gold'
+                }`}
+              >
+                <span className="block text-sm font-medium text-ink">{tp.ten}</span>
+                <span className="block text-xs text-ink-soft">{tp.vungMien}</span>
+              </button>
+            );
+          })}
         </div>
       </div>
 
+      {phanGioiThieu}
+
       <div>
-        <h3 className="font-display text-sm font-semibold text-ink-soft uppercase tracking-wide mb-3">
-          Dịp sử dụng
-        </h3>
+        <h3 className={TIEU_DE}>Dịp sử dụng</h3>
         <div className="flex flex-wrap gap-2">
-          {danhSachSuKien.map((sk) => (
-            <button
-              key={sk.id}
-              onClick={() => onChonSuKien(sk.id)}
-              className={`px-3 py-1.5 rounded-full text-sm border transition ${
-                suKienDangChon === sk.id
-                  ? 'bg-ink text-paper border-ink'
-                  : 'border-ink-soft/30 hover:border-gold'
-              }`}
-            >
-              {sk.ten}
-            </button>
-          ))}
+          {danhSachSuKien.map((sk) => {
+            const chon = suKienDangChon === sk.id;
+            return (
+              <button
+                key={sk.id}
+                type="button"
+                aria-pressed={chon}
+                onClick={() => onChonSuKien(chon ? null : sk.id)}
+                className={`rounded-full border px-3 py-1.5 text-sm transition ${
+                  chon
+                    ? 'border-lacquer bg-lacquer/10 font-medium text-ink'
+                    : 'border-ink-soft/30 hover:border-gold'
+                }`}
+              >
+                {sk.ten}
+              </button>
+            );
+          })}
         </div>
       </div>
     </div>

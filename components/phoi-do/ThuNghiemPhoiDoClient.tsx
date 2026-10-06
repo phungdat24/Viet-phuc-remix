@@ -13,6 +13,7 @@ import { layBoMau, chuanHoaTen } from '@/lib/mauTheoTrangPhuc';
 import { layPhuKienChoPhep, layNhomCuaPhuKien } from '@/lib/phuKienTheoTrangPhuc';
 import { useDanhMuc } from '@/hooks/useDanhMuc';
 import type { KetQuaKiemTra, SuKien, ToHopAI } from '@/types/phoi-do';
+import GioiThieuVanHoa from './GioiThieuVanHoa';
 
 /** Đọc danh sách phụ kiện từ URL: ưu tiên `phuKienIds=a,b`, nếu không có thì dùng `phuKienId=a` (bản cũ). */
 function docPhuKienTuUrl(params: URLSearchParams): string[] {
@@ -358,13 +359,23 @@ export default function ThuNghiemPhoiDoClient() {
       <div className="grid grid-cols-1 lg:grid-cols-[280px_minmax(0,1fr)_300px] lg:grid-rows-[minmax(0,1fr)] gap-6 lg:flex-1 lg:min-h-0">
         {/* Cột trái: Chọn trang phục & bối cảnh */}
         <aside className="space-y-8 lg:min-h-0 lg:overflow-y-auto p-1">
-          <ChonTrangPhuc
+            <ChonTrangPhuc
             danhSachTrangPhuc={danhMuc.trangPhuc}
             danhSachSuKien={danhMuc.suKien}
             trangPhucDangChon={trangPhucId}
             suKienDangChon={suKienId}
             onChonTrangPhuc={xuLyChonTrangPhuc}
             onChonSuKien={boc(setSuKienId)}
+            phanGioiThieu={
+              trangPhucDangChon ? (
+                <GioiThieuVanHoa
+                  key={trangPhucDangChon.id}
+                  trangPhucId={trangPhucDangChon.id}
+                  tenTrangPhuc={trangPhucDangChon.ten}
+                  vungMien={trangPhucDangChon.vungMien}
+                />
+              ) : null
+            }
           />
         </aside>
 
