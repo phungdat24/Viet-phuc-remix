@@ -34,6 +34,9 @@ import { kiemTraQuyenAdmin } from "@/lib/adminAuth";
  * Response 200 (đã có sẵn): { data: ToHopDuocDuyet, daTonTai: true }
  * Response 201 (mới tạo):   { data: ToHopDuocDuyet, daTonTai: false }
  */
+// Vercel: mặc định hàm chỉ chạy ~10 giây, trong khi sinh ảnh + nhận xét + upload mất 10–30 giây.
+export const maxDuration = 60;
+
 const TOI_DA_PHU_KIEN = 10;
 
 export async function POST(request: NextRequest) {
@@ -198,8 +201,11 @@ export async function POST(request: NextRequest) {
     return NextResponse.json(
       {
         error: "Không thể sinh ảnh AI cho tổ hợp này.",
-        // Chỉ lộ chi tiết khi chạy dev để dễ tìm nguyên nhân (Supabase, DB, ...).
-        chiTiet: process.env.NODE_ENV !== "production" && error instanceof Error ? error.message : undefined,
+        // Lộ chi tiết khi chạy dev, hoặc khi đặt biến môi trường HIEN_CHI_TIET_LOI=1 (gỡ lỗi trên Vercel, xong nên xoá).
+        chiTiet:
+          (process.env.NODE_ENV !== "production" || process.env.HIEN_CHI_TIET_LOI === "1") && error instanceof Error
+            ? error.message
+            : undefined,
       },
       { status: 500 }
     );
