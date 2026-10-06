@@ -34,7 +34,7 @@ export interface DauVaoSinhAnh {
   hexMauChinh: string;
   tenMauPhu: string;
   hexMauPhu: string;
-  /** Rỗng = người dùng không chọn phụ kiện → ảnh không kèm phụ kiện. */
+   /** Rỗng = người dùng không chọn phụ kiện → ảnh không kèm phụ kiện. */
   tenCacPhuKien: string[];
   tenSuKien: string;
 }
