@@ -1,5 +1,6 @@
 'use client';
 
+import Link from 'next/link';
 import type { KetQuaKiemTra } from '@/types/phoi-do';
 import SinhAnhAI, { type AnhAIProps } from './SinhAnhAI';
 
@@ -108,6 +109,14 @@ export default function KetQuaPhoiDo({ ketQua, daLuu, daSaoChep, onLuu, onChiaSe
             : null
         }
       />
+
+      {daLuu && (anhAI.thieuThongTin || (anhAI.loi && !anhAI.toHop && !anhAI.dangSinh)) && (
+        <p className="mt-3 text-center text-sm" role="status">
+          <Link href="/lookbook" className="font-medium text-lacquer hover:underline">
+            Xem Lookbook của tôi →
+          </Link>
+        </p>
+      )}
 
       <div className="flex gap-2 mt-3">
         {/* Khi có ảnh AI thì việc lưu Lookbook đi qua bước duyệt ở trên;

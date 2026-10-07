@@ -28,12 +28,20 @@ export default function HeroSection() {
           Chọn trang phục, phối màu và phụ kiện — xem gợi ý có hợp tông, có đúng nếp văn hoá hay không,
           rồi lưu lại thành lookbook của riêng bạn.
         </p>
-        <Link
-          href="/phoi-do"
-          className="inline-block mt-6 bg-lacquer text-white font-medium px-6 py-3 rounded-md hover:opacity-90 transition"
-        >
-          Khám phá &amp; Phối đồ ngay
-        </Link>
+        <div className="mt-6 flex flex-wrap gap-3">
+          <Link
+            href="/phoi-do"
+            className="inline-block bg-lacquer text-white font-medium px-6 py-3 rounded-md hover:opacity-90 transition"
+          >
+            Phối đồ ngay
+          </Link>
+          <Link
+            href="/van-hoa"
+            className="inline-block border border-ink-soft/40 bg-paper/70 text-ink font-medium px-6 py-3 rounded-md hover:border-gold transition"
+          >
+            Tìm hiểu văn hoá
+          </Link>
+        </div>
       </div>
     </section>
   );
