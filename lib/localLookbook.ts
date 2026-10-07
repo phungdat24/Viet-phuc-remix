@@ -22,6 +22,13 @@ export interface LookbookItem {
 
 const KEY = 'viet-phuc-remix-lookbook';
 
+/** Phát khi Lookbook thay đổi để thanh điều hướng cập nhật số lượng ngay, không cần tải lại trang. */
+export const SU_KIEN_LOOKBOOK = 'viet-phuc-lookbook-doi';
+
+function thongBaoDoi(): void {
+  if (typeof window !== 'undefined') window.dispatchEvent(new Event(SU_KIEN_LOOKBOOK));
+}
+
 /** Đọc danh sách phụ kiện của 1 bộ phối, chấp nhận cả dữ liệu cũ (chỉ có phuKienId). */
 export function layPhuKienIds(item: Pick<LookbookItem, 'phuKienId' | 'phuKienIds'>): string[] {
   if (item.phuKienIds && item.phuKienIds.length > 0) return item.phuKienIds;
@@ -49,12 +56,14 @@ export function saveLookbook(
   };
   existing.push(newItem);
   localStorage.setItem(KEY, JSON.stringify(existing));
+  thongBaoDoi();
   return newItem;
 }
 
 export function deleteItem(id: string): void {
   const updated = loadLookbook().filter((item) => item.id !== id);
   localStorage.setItem(KEY, JSON.stringify(updated));
+  thongBaoDoi();
 }
 
 export function toggleYeuThich(id: string): void {

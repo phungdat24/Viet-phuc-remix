@@ -1,5 +1,6 @@
 'use client';
 
+import Link from 'next/link';
 import type { ToHopAI } from '@/types/phoi-do';
 import GhiChuAnhAI from './GhiChuAnhAI';
 
@@ -82,7 +83,7 @@ export default function SinhAnhAI({
         <img
           src={toHop.imageUrl}
           alt="Ảnh AI sinh cho bộ phối đồ"
-          className="w-full max-h-160 ect-contain rounded-md border border-ink-soft/15 bg-paper"
+          className="w-full max-h-160 object-contain rounded-md border border-ink-soft/15 bg-paper"
         />
       )}
 
@@ -129,7 +130,12 @@ export default function SinhAnhAI({
           </button>
         </div>
       ) : daLuu ? (
-        <p className="text-sm text-jade font-medium text-center py-2">Đã lưu vào Lookbook cá nhân ✓</p>
+        <div className="rounded-md border border-jade/40 bg-jade/10 p-3 text-center" role="status">
+          <p className="text-sm font-medium text-jade">Đã lưu vào Lookbook cá nhân ✓</p>
+          <Link href="/lookbook" className="mt-1 inline-block text-sm font-medium text-lacquer hover:underline">
+            Xem Lookbook của tôi →
+          </Link>
+        </div>
       ) : (
         <>
           <p className="text-xs text-ink-soft">

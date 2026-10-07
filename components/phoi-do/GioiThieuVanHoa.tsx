@@ -1,6 +1,8 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import Link from 'next/link';
+import { laySlugTheoTen } from '@/lib/vanHoa/duLieu';
 
 interface MucNoiDung {
   id: string;
@@ -69,6 +71,7 @@ export default function GioiThieuVanHoa({ trangPhucId, tenTrangPhuc, vungMien }:
   }, [trangPhucId]);
 
   const anh = ANH_TRANG_PHUC[tenTrangPhuc.normalize('NFC').trim()];
+  const slugVanHoa = laySlugTheoTen(tenTrangPhuc);
   const dangMo = moId === undefined ? (danhSach?.[0]?.id ?? null) : moId;
 
   return (
@@ -79,7 +82,7 @@ export default function GioiThieuVanHoa({ trangPhucId, tenTrangPhuc, vungMien }:
           src={anh}
           alt={`Hình minh hoạ ${tenTrangPhuc}`}
           onError={() => setAnhLoi(true)}
-          className="h-64 w-full bg-paper object-contain"
+          className="h-44 w-full bg-paper object-contain lg:h-64"
         />
       )}
 
@@ -114,9 +117,9 @@ export default function GioiThieuVanHoa({ trangPhucId, tenTrangPhuc, vungMien }:
                     </button>
                     {mo && (
                       <div className="pb-3">
-                        <p className="text-[13px] leading-relaxed text-ink">{m.noiDung}</p>
+                        <p className="text-sm leading-relaxed text-ink">{m.noiDung}</p>
                         {m.nguonThamKhao && (
-                          <p className="mt-2 text-[11px] italic text-ink-soft">Nguồn: {m.nguonThamKhao}</p>
+                          <p className="mt-2 text-xs italic text-ink-soft">Nguồn: {m.nguonThamKhao}</p>
                         )}
                       </div>
                     )}
@@ -136,6 +139,15 @@ export default function GioiThieuVanHoa({ trangPhucId, tenTrangPhuc, vungMien }:
             </div>
           )}
         </div>
+
+        {slugVanHoa && (
+          <Link
+            href={`/van-hoa/${slugVanHoa}`}
+            className="mt-2 inline-block text-sm font-medium text-lacquer hover:underline"
+          >
+            Đọc đầy đủ về {tenTrangPhuc}, có nguồn và các quan điểm khác nhau →
+          </Link>
+        )}
       </div>
     </section>
   );

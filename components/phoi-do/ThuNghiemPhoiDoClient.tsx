@@ -1,6 +1,6 @@
 'use client';
 
-import { useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useSearchParams } from 'next/navigation';
 import ChonTrangPhuc from './ChonTrangPhuc';
 import BangMau from './BangMau';
@@ -14,6 +14,7 @@ import { layPhuKienChoPhep, layNhomCuaPhuKien } from '@/lib/phuKienTheoTrangPhuc
 import { useDanhMuc } from '@/hooks/useDanhMuc';
 import type { KetQuaKiemTra, SuKien, ToHopAI } from '@/types/phoi-do';
 import GioiThieuVanHoa from './GioiThieuVanHoa';
+import TienTrinhPhoiDo from './TienTrinhPhoiDo';
 
 /** Đọc danh sách phụ kiện từ URL: ưu tiên `phuKienIds=a,b`, nếu không có thì dùng `phuKienId=a` (bản cũ). */
 function docPhuKienTuUrl(params: URLSearchParams): string[] {
@@ -48,6 +49,13 @@ export default function ThuNghiemPhoiDoClient() {
   const [suKienNgauNhien, setSuKienNgauNhien] = useState<SuKien | null>(null);
   // Mỗi lần bấm "Xem kết quả" / đổi lựa chọn tăng số này để bỏ qua phản hồi cũ đến muộn.
   const idYeuCau = useRef(0);
+  // Khi có kết quả thì tự cuộn tới khu kết quả (trên điện thoại kết quả nằm dưới cùng, dễ bị bỏ sót).
+  const khuKetQuaRef = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    if (!ketQua) return;
+    const laDiDong = window.matchMedia('(max-width: 1023px)').matches;
+    khuKetQuaRef.current?.scrollIntoView({ behavior: 'smooth', block: laDiDong ? 'start' : 'nearest' });
+  }, [ketQua]);
 
   if (dangTai) return <p className="text-center py-12 text-ink-soft">Đang tải dữ liệu...</p>;
   if (loi || !danhMuc) return <p className="text-center py-12 text-lacquer">Đã xảy ra lỗi: {loi}</p>;
@@ -353,12 +361,18 @@ export default function ThuNghiemPhoiDoClient() {
 
   return (
     // Trên màn hình lớn: cả trang cao đúng bằng cửa sổ trình duyệt (h-dvh), không cuộn cả trang.
-    <main className="max-w-6xl mx-auto w-full px-4 py-4 flex flex-col lg:h-dvh">
+    <main className="max-w-6xl mx-auto w-full px-4 py-4 pb-20 lg:pb-4 flex flex-col lg:h-dvh">
       <h1 className="font-display text-xl lg:text-2xl font-semibold mb-3 shrink-0">Thử nghiệm phối đồ</h1>
+
+      <TienTrinhPhoiDo
+        daChonTrangPhuc={Boolean(trangPhucId)}
+        daChonMau={daChonDuDeXem}
+        daCoKetQua={Boolean(ketQua)}
+      />
 
       <div className="grid grid-cols-1 lg:grid-cols-[280px_minmax(0,1fr)_300px] lg:grid-rows-[minmax(0,1fr)] gap-6 lg:flex-1 lg:min-h-0">
         {/* Cột trái: Chọn trang phục & bối cảnh */}
-        <aside className="space-y-8 lg:min-h-0 lg:overflow-y-auto p-1">
+        <aside className="order-1 lg:order-none space-y-8 lg:min-h-0 lg:overflow-y-auto p-1">
             <ChonTrangPhuc
             danhSachTrangPhuc={danhMuc.trangPhuc}
             danhSachSuKien={danhMuc.suKien}
@@ -380,7 +394,7 @@ export default function ThuNghiemPhoiDoClient() {
         </aside>
 
         {/* Cột giữa: Khu xem trước (co giãn theo khung) + nút thẩm định luôn nằm cuối */}
-        <section className="bg-paper-raised rounded-md flex flex-col lg:min-h-0 lg:overflow-y-auto">
+        <section className="order-3 lg:order-none bg-paper-raised rounded-md flex flex-col lg:min-h-0 lg:overflow-y-auto">
           {/* Có ảnh AI rồi thì xoá phần hình minh hoạ phác thảo ở trên */}
                     {!coAnhAI && (
             <>
@@ -443,6 +457,7 @@ export default function ThuNghiemPhoiDoClient() {
           )}
 
           {ketQua && (
+            <div ref={khuKetQuaRef} className="scroll-mt-16">
             <KetQuaPhoiDo
               ketQua={ketQua}
               daLuu={daLuu}
@@ -467,11 +482,12 @@ export default function ThuNghiemPhoiDoClient() {
                 onSinhLai: xuLySinhLaiAnh,
               }}
             />
+            </div>
           )}
         </section>
 
         {/* Cột phải: Tùy chỉnh màu sắc & phụ kiện */}
-        <aside className="space-y-6 lg:min-h-0 lg:overflow-y-auto p-1">
+        <aside className="order-2 lg:order-none space-y-6 lg:min-h-0 lg:overflow-y-auto p-1">
           <BangMau
             danhSachMauChinh={danhSachMauChinh}
             danhSachMauPhu={danhSachMauPhu}
@@ -491,6 +507,24 @@ export default function ThuNghiemPhoiDoClient() {
           />
         </aside>
       </div>
+
+      {/* Điện thoại: nút hành động luôn thấy được, không phải cuộn xuống tìm */}
+      {trangPhucId && !ketQua && (
+        <div className="fixed inset-x-0 bottom-[calc(4.5rem+env(safe-area-inset-bottom))] z-30 border-t border-ink-soft/15 bg-paper/95 px-4 py-2 backdrop-blur lg:hidden">
+          {loiKiemTra && <p className="mb-1 text-xs text-lacquer">{loiKiemTra}</p>}
+          {daChonDuDeXem ? (
+            <button
+              onClick={xuLyXemKetQua}
+              disabled={dangKiemTra}
+              className="w-full rounded-md bg-lacquer py-2.5 font-medium text-white transition hover:opacity-90 disabled:opacity-60"
+            >
+              {dangKiemTra ? 'Đang thẩm định...' : 'Xem kết quả phối đồ'}
+            </button>
+          ) : (
+            <p className="text-center text-sm text-ink-soft">Chọn màu chính và màu phụ để tiếp tục</p>
+          )}
+        </div>
+      )}
     </main>
   );
 }
