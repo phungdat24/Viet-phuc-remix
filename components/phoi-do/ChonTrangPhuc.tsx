@@ -11,7 +11,7 @@ interface Props {
   onChonTrangPhuc: (id: string) => void;
   /** Truyền null khi người dùng bấm lại dịp đang chọn để bỏ chọn. */
   onChonSuKien: (id: string | null) => void;
-  /** Khối giới thiệu văn hoá, hiện ngay dưới các nút trang phục. */
+  /** Khối giới thiệu văn hoá, hiện dưới phần "Dịp sử dụng". */
   phanGioiThieu?: ReactNode;
 }
 
@@ -53,10 +53,11 @@ export default function ChonTrangPhuc({
         </div>
       </div>
 
-      {phanGioiThieu}
-
       <div>
         <h3 className={TIEU_DE}>Dịp sử dụng</h3>
+        <p className="mb-2 text-xs text-ink-soft">
+          Không bắt buộc. Chọn dịp giúp nhận định văn hoá đáng tin hơn. Bấm lại để bỏ chọn.
+        </p>
         <div className="flex flex-wrap gap-2">
           {danhSachSuKien.map((sk) => {
             const chon = suKienDangChon === sk.id;
@@ -72,12 +73,15 @@ export default function ChonTrangPhuc({
                     : 'border-ink-soft/30 hover:border-gold'
                 }`}
               >
+                {chon && <span aria-hidden>✓ </span>}
                 {sk.ten}
               </button>
             );
           })}
         </div>
       </div>
+
+      {phanGioiThieu}
     </div>
   );
 }

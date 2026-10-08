@@ -1,16 +1,21 @@
 'use client';
 
 import { useState } from 'react';
-import type { PhuKien } from '@/types/phoi-do';
+import type { MucDoVanHoa, PhuKien } from '@/types/phoi-do';
 import { NHOM_PHU_KIEN, chuanHoaTenPhuKien } from '@/lib/phuKienTheoTrangPhuc';
 import { layAnhPhuKien } from '@/lib/anhPhuKien';
+import { useQuyTacVanHoa } from '@/hooks/useQuyTacVanHoa';
+import { tinhMucDoMotMon, timMonThayThe } from '@/lib/canhBaoVanHoa';
+import CanhBaoVanHoa, { type MucCanhBaoVanHoa } from './CanhBaoVanHoa';
 
 interface Props {
   danhSachPhuKien: PhuKien[];
-  /** Tên các phụ kiện phù hợp với trang phục đang chọn (dùng để cảnh báo, KHÔNG hiện ở nút). */
-  tenPhuKienPhuHop: string[];
-  /** Tên trang phục đang chọn, dùng trong câu cảnh báo. */
+  /** Chỉ dùng dự phòng khi không tải được quy tắc từ máy chủ. */
+  tenPhuKienPhuHop?: string[];
   tenTrangPhuc: string | null;
+  trangPhucId: string | null;
+  /** Dịp do NGƯỜI DÙNG chọn (không tính dịp ngẫu nhiên). */
+  suKienId: string | null;
   phuKienDangChon: string[];
   daChonTrangPhuc: boolean;
   onBatTatPhuKien: (id: string) => void;
@@ -50,12 +55,33 @@ function AnhPhuKien({ ten }: { ten: string }) {
 
 export default function ChonPhuKien({
   danhSachPhuKien,
-  tenPhuKienPhuHop,
+  tenPhuKienPhuHop = [],
   tenTrangPhuc,
+  trangPhucId,
+  suKienId,
   phuKienDangChon,
   daChonTrangPhuc,
   onBatTatPhuKien,
 }: Props) {
+  const { quyTac, loi: loiQuyTac } = useQuyTacVanHoa(trangPhucId);
+  // Các thẻ cảnh báo người dùng đã bấm "Giữ lại" (khoá theo trang phục + phụ kiện).
+  const [daAn, setDaAn] = useState<Set<string>>(new Set());
+  const khoaAn = (id: string) => `${tenTrangPhuc ?? ''}|${id}`;
+
+  function batTat(id: string) {
+    setDaAn((truoc) => {
+      if (!truoc.has(khoaAn(id))) return truoc;
+      const moi = new Set(truoc);
+      moi.delete(khoaAn(id));
+      return moi;
+    });
+    onBatTatPhuKien(id);
+  }
+
+  function giuLai(id: string) {
+    setDaAn((truoc) => new Set(truoc).add(khoaAn(id)));
+  }
+
   if (!daChonTrangPhuc) {
     return (
       <div>
@@ -67,10 +93,51 @@ export default function ChonPhuKien({
 
   const tenPhuHop = new Set(tenPhuKienPhuHop.map(chuanHoaTenPhuKien));
 
-  // Chỉ cảnh báo khi người dùng ĐÃ CHỌN món ít phù hợp.
-  const monItPhuHopDaChon = danhSachPhuKien.filter(
-    (p) => phuKienDangChon.includes(p.id) && !tenPhuHop.has(chuanHoaTenPhuKien(p.ten)),
-  );
+  // Chỉ hiện thẻ khi người dùng ĐÃ CHỌN món cần lưu ý (nút phụ kiện không đánh dấu sẵn).
+  const cacMucCanhBao: MucCanhBaoVanHoa[] = [];
+  for (const p of danhSachPhuKien) {
+    if (!phuKienDangChon.includes(p.id) || daAn.has(khoaAn(p.id))) continue;
+
+    let mucDo: MucDoVanHoa;
+    let lyDoGoc: string | null = null;
+    let rieng = false;
+    if (quyTac) {
+      const kq = tinhMucDoMotMon(quyTac, p.id, suKienId);
+      mucDo = kq.mucDo;
+      lyDoGoc = kq.lyDo;
+      rieng = kq.rieng;
+    } else if (loiQuyTac) {
+      mucDo = tenPhuHop.has(chuanHoaTenPhuKien(p.ten)) ? 'phu_hop' : 'khong_phu_hop';
+    } else {
+      continue; // đang tải quy tắc
+    }
+    if (mucDo !== 'khong_phu_hop' && mucDo !== 'tuy_dip') continue;
+
+    let lyDo: string;
+    if (mucDo === 'khong_phu_hop') {
+      lyDo =
+        lyDoGoc ??
+        `Nét này thường gắn với phong cách khác, nên có thể làm lệch đặc trưng gốc của ${tenTrangPhuc ?? 'trang phục này'}. Bạn vẫn có thể giữ lại nếu muốn.`;
+    } else {
+      lyDo = lyDoGoc ?? 'Món này hợp hay không còn tuỳ dịp.';
+      if (!rieng) {
+        lyDo += suKienId
+          ? ' Hiện chưa có quy tắc riêng cho dịp bạn chọn.'
+          : ' Hãy chọn thêm dịp sử dụng ở khung bên trái để có kết quả rõ hơn.';
+      }
+    }
+
+    cacMucCanhBao.push({
+      id: p.id,
+      ten: p.ten,
+      vungMien: p.vungMien,
+      mucDo,
+      lyDo,
+      thayThe: quyTac
+        ? timMonThayThe(quyTac, p, danhSachPhuKien, suKienId).map((t) => ({ id: t.id, ten: t.ten }))
+        : [],
+    });
+  }
 
   const daXep = new Set<string>();
   const cacNhom = NHOM_PHU_KIEN.map((nhom) => {
@@ -90,17 +157,16 @@ export default function ChonPhuKien({
         Tuỳ chọn, có thể chọn nhiều món. Bấm lại để bỏ chọn; không chọn nghĩa là không dùng.
       </p>
 
-      {monItPhuHopDaChon.length > 0 && (
-        <div
-          role="alert"
-          className="mb-4 rounded-md border border-lacquer/40 bg-lacquer/5 px-3 py-2 text-xs text-ink"
-        >
-          <p className="font-medium text-lacquer">⚠ Cần lưu ý về văn hoá</p>
-          <p className="mt-1">
-            {monItPhuHopDaChon.map((p) => p.ten).join(', ')} ít phù hợp với{' '}
-            {tenTrangPhuc ?? 'trang phục này'}. Bạn vẫn có thể giữ lại, bấm &quot;Xem kết quả&quot; để
-            đọc giải thích chi tiết.
-          </p>
+      {cacMucCanhBao.length > 0 && (
+        <div className="mb-4">
+          <p className="mb-1.5 text-xs font-medium text-ink-soft">Gợi ý về văn hoá</p>
+          <CanhBaoVanHoa
+            cacMuc={cacMucCanhBao}
+            chuaChonDip={!suKienId}
+            onThayBang={batTat}
+            onBoMon={batTat}
+            onGiuLai={giuLai}
+          />
         </div>
       )}
 
@@ -123,7 +189,7 @@ export default function ChonPhuKien({
                       key={pk.id}
                       type="button"
                       aria-pressed={dangChon}
-                      onClick={() => onBatTatPhuKien(pk.id)}
+                      onClick={() => batTat(pk.id)}
                       className={`relative flex flex-col gap-1 rounded-md border p-1.5 text-center transition ${
                         dangChon
                           ? 'border-lacquer bg-lacquer/10 shadow-sm'

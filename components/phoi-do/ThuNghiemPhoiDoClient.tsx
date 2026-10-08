@@ -212,16 +212,17 @@ export default function ThuNghiemPhoiDoClient() {
     setSuKienNgauNhien(ngauNhien);
 
     try {
-      const res = await fetch('/api/kiem-tra-phoi-do', {
+        const res = await fetch('/api/kiem-tra-phoi-do', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        // TẠM THỜI: server vẫn đọc `phuKienId` (món đầu tiên). `phuKienIds` gửi sẵn cho bước nâng cấp server.
+        // Thẩm định văn hoá CHỈ dùng dịp do người dùng chọn (null nếu chưa chọn).
+        // Dịp ngẫu nhiên (suKienDung) chỉ dành cho việc sinh ảnh minh hoạ.
         body: JSON.stringify({
           trangPhucId,
           mauChinhId,
           mauPhuId,
           phuKienIds,
-          suKienId: suKienDung,
+          suKienId,
         }),
       });
       const body = await res.json();
@@ -372,7 +373,7 @@ export default function ThuNghiemPhoiDoClient() {
 
       <div className="grid grid-cols-1 lg:grid-cols-[280px_minmax(0,1fr)_300px] lg:grid-rows-[minmax(0,1fr)] gap-6 lg:flex-1 lg:min-h-0">
         {/* Cột trái: Chọn trang phục & bối cảnh */}
-        <aside className="order-1 lg:order-none space-y-8 lg:min-h-0 lg:overflow-y-auto p-1">
+        <aside className="order-1 lg:order-0 space-y-8 lg:min-h-0 lg:overflow-y-auto p-1">
             <ChonTrangPhuc
             danhSachTrangPhuc={danhMuc.trangPhuc}
             danhSachSuKien={danhMuc.suKien}
@@ -394,7 +395,7 @@ export default function ThuNghiemPhoiDoClient() {
         </aside>
 
         {/* Cột giữa: Khu xem trước (co giãn theo khung) + nút thẩm định luôn nằm cuối */}
-        <section className="order-3 lg:order-none bg-paper-raised rounded-md flex flex-col lg:min-h-0 lg:overflow-y-auto">
+        <section className="order-3 lg:order-0 bg-paper-raised rounded-md flex flex-col lg:min-h-0 lg:overflow-y-auto">
           {/* Có ảnh AI rồi thì xoá phần hình minh hoạ phác thảo ở trên */}
                     {!coAnhAI && (
             <>
@@ -460,6 +461,8 @@ export default function ThuNghiemPhoiDoClient() {
             <div ref={khuKetQuaRef} className="scroll-mt-16">
             <KetQuaPhoiDo
               ketQua={ketQua}
+              chuaChonDip={!suKienId}
+              cacPhuKien={cacPhuKienDangChon}
               daLuu={daLuu}
               daSaoChep={daSaoChep}
               onLuu={xuLyLuu}
@@ -487,7 +490,7 @@ export default function ThuNghiemPhoiDoClient() {
         </section>
 
         {/* Cột phải: Tùy chỉnh màu sắc & phụ kiện */}
-        <aside className="order-2 lg:order-none space-y-6 lg:min-h-0 lg:overflow-y-auto p-1">
+        <aside className="order-2 lg:order-0 space-y-6 lg:min-h-0 lg:overflow-y-auto p-1">
           <BangMau
             danhSachMauChinh={danhSachMauChinh}
             danhSachMauPhu={danhSachMauPhu}
@@ -501,6 +504,8 @@ export default function ThuNghiemPhoiDoClient() {
             danhSachPhuKien={danhSachPhuKienHienThi}
             tenPhuKienPhuHop={tenPhuKienChoPhep ?? []}
             tenTrangPhuc={trangPhucDangChon?.ten ?? null}
+            trangPhucId={trangPhucId}
+            suKienId={suKienId}
             phuKienDangChon={phuKienIds}
             daChonTrangPhuc={Boolean(trangPhucDangChon)}
             onBatTatPhuKien={xuLyBatTatPhuKien}

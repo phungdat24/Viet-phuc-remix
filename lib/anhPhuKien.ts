@@ -15,7 +15,7 @@ const ANH_PHU_KIEN: Record<string, string> = {
   'Yếm đào': '/images/phu-kien/yem-dao-hong.webp',
   'Trâm cài': '/images/phu-kien/tram-cai.webp',
   'Guốc mộc': '/images/phu-kien/guoc-moc.webp',
-};~
+};
 
 // Chuẩn hoá Unicode NFC một lần để so khớp không bị lỗi gõ dấu khác kiểu.
 const BANG_TRA = new Map(

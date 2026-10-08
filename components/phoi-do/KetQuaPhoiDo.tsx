@@ -1,8 +1,9 @@
 'use client';
 
 import Link from 'next/link';
-import type { KetQuaKiemTra } from '@/types/phoi-do';
+import type { KetQuaKiemTra, MucDoVanHoa, PhuKien } from '@/types/phoi-do';
 import SinhAnhAI, { type AnhAIProps } from './SinhAnhAI';
+import CanhBaoVanHoa, { GIAO_DIEN_MUC_DO, type MucCanhBaoVanHoa } from './CanhBaoVanHoa';
 
 const NHAN_MAU: Record<string, string> = {
   tuong_dong: 'Tương đồng',
@@ -38,36 +39,44 @@ function DongKetQua({
   );
 }
 
-function dongVanHoa(phuHopVanHoa: KetQuaKiemTra['phuHopVanHoa']) {
-  switch (phuHopVanHoa.mucDo) {
-    case 'phu_hop':
+/** Món cần chú ý xếp trước, món phù hợp xếp sau. */
+const THU_TU_MUC: Record<MucDoVanHoa, number> = {
+  khong_phu_hop: 0,
+  tuy_dip: 1,
+  chua_co_du_lieu: 2,
+  phu_hop: 3,
+  khong_co_phu_kien: 4,
+};
+
+/** Chuyển kết quả từng món (chiTietPhuKien) thành các thẻ; null nếu không có (dữ liệu cũ). */
+function taoCacMuc(
+  pv: KetQuaKiemTra['phuHopVanHoa'],
+  cacPhuKien: PhuKien[],
+): MucCanhBaoVanHoa[] | null {
+  const chiTiet = pv.chiTietPhuKien;
+  if (!chiTiet || chiTiet.length === 0) return null;
+
+  const vungTheoId = new Map(cacPhuKien.map((p) => [p.id, p.vungMien]));
+  const tenTrangPhuc = pv.trangPhuc?.ten ?? 'trang phục này';
+
+  return [...chiTiet]
+    .sort((a, b) => THU_TU_MUC[a.mucDo] - THU_TU_MUC[b.mucDo])
+    .map((c) => {
+      let lyDo = c.lyDo;
+      if (c.mucDo === 'khong_phu_hop' && !lyDo) {
+        lyDo = `Nét này có thể làm lệch đặc trưng gốc của ${tenTrangPhuc}. Bạn vẫn có thể giữ lại nếu muốn.`;
+      }
+      if (c.mucDo === 'tuy_dip' && pv.canChonDip && !lyDo?.includes('chọn thêm dịp')) {
+        lyDo = `${lyDo ?? 'Món này hợp hay không còn tuỳ dịp.'} Hãy chọn dịp ở khung bên trái để có kết quả rõ hơn.`;
+      }
       return {
-        mucDo: 'ok' as const,
-        noiDung: phuHopVanHoa.lyDo ?? 'Trang phục và phụ kiện phù hợp về mặt văn hoá.',
+        id: c.phuKien.id,
+        ten: c.phuKien.ten,
+        vungMien: vungTheoId.get(c.phuKien.id) ?? null,
+        mucDo: c.mucDo,
+        lyDo,
       };
-    case 'khong_phu_hop':
-      return {
-        mucDo: 'warn' as const,
-        noiDung: phuHopVanHoa.lyDo ?? 'Tổ hợp này có thể làm sai lệch đặc trưng văn hoá gốc.',
-      };
-    case 'tuy_dip':
-      return {
-        mucDo: 'info' as const,
-        noiDung: phuHopVanHoa.canChonDip
-          ? 'Sự phù hợp còn tuỳ dịp — hãy chọn thêm dịp sử dụng ở khung bên trái để có kết quả chính xác hơn.'
-          : (phuHopVanHoa.lyDo ?? 'Sự phù hợp còn tuỳ theo bối cảnh sử dụng.'),
-      };
-    case 'khong_co_phu_kien':
-      return {
-        mucDo: 'info' as const,
-        noiDung: 'Chưa chọn phụ kiện nên chưa có gì để đối chiếu về mặt văn hoá.',
-      };
-    default:
-      return {
-        mucDo: 'info' as const,
-        noiDung: phuHopVanHoa.lyDo ?? 'Chưa có dữ liệu quy tắc cho tổ hợp này.',
-      };
-  }
+    });
 }
 
 interface Props {
@@ -77,11 +86,35 @@ interface Props {
   onLuu: () => void;
   onChiaSe: () => void;
   anhAI: AnhAIProps;
+  /** true = người dùng chưa chọn dịp (kết quả văn hoá kém tin cậy hơn). */
+  chuaChonDip: boolean;
+  /** Các phụ kiện đang chọn, để lấy vùng miền hiển thị trong thẻ. */
+  cacPhuKien: PhuKien[];
 }
 
-export default function KetQuaPhoiDo({ ketQua, daLuu, daSaoChep, onLuu, onChiaSe, anhAI }: Props) {
+export default function KetQuaPhoiDo({
+  ketQua,
+  daLuu,
+  daSaoChep,
+  onLuu,
+  onChiaSe,
+  anhAI,
+  chuaChonDip,
+  cacPhuKien,
+}: Props) {
   const { haiHoaMau, phuHopVanHoa } = ketQua;
-  const dongVH = dongVanHoa(phuHopVanHoa);
+  const cacMuc = taoCacMuc(phuHopVanHoa, cacPhuKien);
+  const gdChung = GIAO_DIEN_MUC_DO[phuHopVanHoa.mucDo];
+  const coPhuKien = phuHopVanHoa.mucDo !== 'khong_co_phu_kien';
+
+  const tenMonCanLuuY = (phuHopVanHoa.chiTietPhuKien ?? [])
+    .filter((c) => c.mucDo === 'khong_phu_hop')
+    .map((c) => c.phuKien.ten);
+  const canhBaoDuoiAnh = phuHopVanHoa.canhBao
+    ? tenMonCanLuuY.length > 0
+      ? `Bộ phối này có món ít phù hợp với trang phục: ${tenMonCanLuuY.join(', ')}. Xem chi tiết ở mục "Chuẩn mực văn hoá" phía trên.`
+      : (phuHopVanHoa.lyDo ?? 'Tổ hợp này có thể làm lệch đặc trưng văn hoá gốc.')
+    : null;
 
   return (
     <div className="p-4 border-t border-ink-soft/15">
@@ -93,22 +126,52 @@ export default function KetQuaPhoiDo({ ketQua, daLuu, daSaoChep, onLuu, onChiaSe
         noiDung={haiHoaMau.goiY}
       />
 
-      <DongKetQua mucDo={dongVH.mucDo} tieuDe="Chuẩn mực văn hoá" noiDung={dongVH.noiDung}>
-        {phuHopVanHoa.goiYThayThe.length > 0 && (
-          <p className="text-xs text-ink-soft mt-1">
-            Gợi ý thay thế: {phuHopVanHoa.goiYThayThe.join(', ')}
+      <div className="py-3 border-t border-ink-soft/15">
+        <div className="flex items-center gap-2">
+          <span
+            aria-hidden
+            className={`flex h-5 w-5 shrink-0 items-center justify-center rounded-full text-[11px] font-bold ${gdChung.tron}`}
+          >
+            {gdChung.bieuTuong}
+          </span>
+          <p className="text-sm font-medium">Chuẩn mực văn hoá: {gdChung.nhan}</p>
+        </div>
+
+        {!coPhuKien && (
+          <p className="mt-2 text-sm text-ink-soft">
+            Chưa chọn phụ kiện nên chưa có gì để đối chiếu về mặt văn hoá.
           </p>
         )}
-      </DongKetQua>
 
-      <SinhAnhAI
-        {...anhAI}
-        canhBaoVanHoa={
-          phuHopVanHoa.canhBao
-            ? (phuHopVanHoa.lyDo ?? 'Tổ hợp này có thể làm sai lệch đặc trưng văn hoá gốc.')
-            : null
-        }
-      />
+        {coPhuKien && chuaChonDip && (
+          <p className="mt-2 rounded-md bg-paper p-2.5 text-xs text-ink-soft">
+            <span aria-hidden>ⓘ </span>
+            Bạn chưa chọn dịp sử dụng nên nhận định văn hoá dưới đây có độ tin cậy thấp hơn. Chọn dịp ở khung
+            bên trái rồi xem lại kết quả để chính xác hơn.
+          </p>
+        )}
+
+        {coPhuKien && (
+          <div className="mt-2">
+            {cacMuc ? (
+              <CanhBaoVanHoa cacMuc={cacMuc} />
+            ) : (
+              <p className="text-sm text-ink-soft">
+                {phuHopVanHoa.lyDo ?? 'Chưa có dữ liệu quy tắc cho tổ hợp này.'}
+              </p>
+            )}
+          </div>
+        )}
+
+        {phuHopVanHoa.goiYThayThe.length > 0 && (
+          <p className="mt-2 text-xs text-ink-soft">
+            Món có thể hợp hơn với trang phục này: {phuHopVanHoa.goiYThayThe.join(', ')}. Muốn đổi món, hãy
+            chỉnh ở khung Phụ kiện rồi xem lại kết quả.
+          </p>
+        )}
+      </div>
+
+      <SinhAnhAI {...anhAI} canhBaoVanHoa={canhBaoDuoiAnh} />
 
       {daLuu && (anhAI.thieuThongTin || (anhAI.loi && !anhAI.toHop && !anhAI.dangSinh)) && (
         <p className="mt-3 text-center text-sm" role="status">
