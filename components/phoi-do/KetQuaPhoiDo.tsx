@@ -4,6 +4,7 @@ import Link from 'next/link';
 import type { KetQuaKiemTra, MucDoVanHoa, PhuKien } from '@/types/phoi-do';
 import SinhAnhAI, { type AnhAIProps } from './SinhAnhAI';
 import CanhBaoVanHoa, { GIAO_DIEN_MUC_DO, type MucCanhBaoVanHoa } from './CanhBaoVanHoa';
+import { laySlugTheoTen, layMucTheoSlug } from '@/lib/vanHoa/duLieu';
 
 const NHAN_MAU: Record<string, string> = {
   tuong_dong: 'Tương đồng',
@@ -115,7 +116,13 @@ export default function KetQuaPhoiDo({
       ? `Bộ phối này có món ít phù hợp với trang phục: ${tenMonCanLuuY.join(', ')}. Xem chi tiết ở mục "Chuẩn mực văn hoá" phía trên.`
       : (phuHopVanHoa.lyDo ?? 'Tổ hợp này có thể làm lệch đặc trưng văn hoá gốc.')
     : null;
-
+    // Ẩn nhận xét AI khi Lớp 1 đang cảnh báo / tuỳ dịp, hoặc có món mà mục văn hoá chưa được kiểm chứng.
+  const coMonChuaKiemChung = (phuHopVanHoa.chiTietPhuKien ?? []).some((c) => {
+    const slug = laySlugTheoTen(c.phuKien.ten);
+    return slug ? layMucTheoSlug(slug)?.trangThai === 'chua-kiem-chung' : false;
+  });
+  const anNhanXetAI =
+    phuHopVanHoa.mucDo === 'khong_phu_hop' || phuHopVanHoa.mucDo === 'tuy_dip' || coMonChuaKiemChung;
   return (
     <div className="p-4 border-t border-ink-soft/15">
       <h3 className="font-display text-base font-semibold mb-1">Kết quả thẩm định</h3>
@@ -171,7 +178,7 @@ export default function KetQuaPhoiDo({
         )}
       </div>
 
-      <SinhAnhAI {...anhAI} canhBaoVanHoa={canhBaoDuoiAnh} />
+      <SinhAnhAI {...anhAI} canhBaoVanHoa={canhBaoDuoiAnh} anNhanXet={anNhanXetAI} />
 
       {daLuu && (anhAI.thieuThongTin || (anhAI.loi && !anhAI.toHop && !anhAI.dangSinh)) && (
         <p className="mt-3 text-center text-sm" role="status">

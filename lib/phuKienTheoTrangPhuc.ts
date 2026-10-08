@@ -1,8 +1,8 @@
 /**
  * Phụ kiện gợi ý theo từng trang phục + cách gom nhóm.
  * - Tên phải KHỚP với cột `ten` trong DB.
- * - PHU_KIEN_THEO_TRANG_PHUC = danh sách PHÙ HỢP (hiện bình thường).
- *   Các phụ kiện còn lại vẫn hiện nhưng đánh dấu "ít phù hợp" và bị Lớp 1 cảnh báo.
+ * - PHU_KIEN_THEO_TRANG_PHUC = danh sách PHÙ HỢP, chỉ dùng DỰ PHÒNG khi không tải được quy tắc từ máy chủ.
+ *   Quy tắc chính thức nằm trong DB (đồng bộ từ lib/vanHoa/quyTacDongBo.ts).
  * - `chiChonMot: true` => trong nhóm đó chỉ chọn được 1 món.
  */
 
@@ -26,8 +26,29 @@ export const NHOM_PHU_KIEN: NhomPhuKien[] = [
   { ten: 'Trang phục kèm', cacPhuKien: ['Yếm đào'], chiChonMot: false },
 ];
 
+/**
+ * Hai nhóm đồ đội đầu KHÔNG dùng cùng lúc: mỗi món của nhóm này xung đột với mọi món của nhóm kia.
+ * (Khăn rằn quấn ở cổ nên không nằm trong danh sách này.)
+ */
+export const NHOM_XUNG_DOT: [string[], string[]] = [
+  ['Nón lá', 'Nón quai thao'],
+  ['Khăn đóng', 'Khăn mỏ quạ'],
+];
+
 export function chuanHoaTenPhuKien(ten: string): string {
   return ten.normalize('NFC').trim();
+}
+
+/**
+ * Nếu thêm món `ten` thì món nào đang chọn gây xung đột? Trả về tên món đó, hoặc null nếu không xung đột.
+ * `tenCacMonDangChon` là tên các phụ kiện đang chọn.
+ */
+export function timMonXungDot(ten: string, tenCacMonDangChon: string[]): string | null {
+  const khoa = chuanHoaTenPhuKien(ten);
+  const [nhomA, nhomB] = NHOM_XUNG_DOT.map((n) => n.map(chuanHoaTenPhuKien));
+  const nhomDoiDien = nhomA.includes(khoa) ? nhomB : nhomB.includes(khoa) ? nhomA : null;
+  if (!nhomDoiDien) return null;
+  return tenCacMonDangChon.find((t) => nhomDoiDien.includes(chuanHoaTenPhuKien(t))) ?? null;
 }
 
 /** Danh sách tên phụ kiện PHÙ HỢP với trang phục, hoặc null nếu chưa chọn / không nhận ra. */

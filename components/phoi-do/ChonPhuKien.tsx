@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import type { MucDoVanHoa, PhuKien } from '@/types/phoi-do';
-import { NHOM_PHU_KIEN, chuanHoaTenPhuKien } from '@/lib/phuKienTheoTrangPhuc';
+import { NHOM_PHU_KIEN, chuanHoaTenPhuKien, timMonXungDot } from '@/lib/phuKienTheoTrangPhuc';
 import { layAnhPhuKien } from '@/lib/anhPhuKien';
 import { useQuyTacVanHoa } from '@/hooks/useQuyTacVanHoa';
 import { tinhMucDoMotMon, timMonThayThe } from '@/lib/canhBaoVanHoa';
@@ -14,7 +14,7 @@ interface Props {
   tenPhuKienPhuHop?: string[];
   tenTrangPhuc: string | null;
   trangPhucId: string | null;
-  /** Dịp do NGƯỜI DÙNG chọn (không tính dịp ngẫu nhiên). */
+  /** Dịp do NGƯỜI DÙNG chọn (không tính dịp mặc định). */
   suKienId: string | null;
   phuKienDangChon: string[];
   daChonTrangPhuc: boolean;
@@ -92,6 +92,7 @@ export default function ChonPhuKien({
   }
 
   const tenPhuHop = new Set(tenPhuKienPhuHop.map(chuanHoaTenPhuKien));
+  const tenDangChon = danhSachPhuKien.filter((p) => phuKienDangChon.includes(p.id)).map((p) => p.ten);
 
   // Chỉ hiện thẻ khi người dùng ĐÃ CHỌN món cần lưu ý (nút phụ kiện không đánh dấu sẵn).
   const cacMucCanhBao: MucCanhBaoVanHoa[] = [];
@@ -150,12 +151,25 @@ export default function ChonPhuKien({
   const conLai = danhSachPhuKien.filter((p) => !daXep.has(p.id));
   if (conLai.length > 0) cacNhom.push({ ten: 'Khác', chiChonMot: false, danhSach: conLai });
 
+  // Có món nào đang bị khoá vì xung đột (nón với khăn đóng / khăn mỏ quạ) không?
+  const coMonBiKhoa = danhSachPhuKien.some(
+    (p) => !phuKienDangChon.includes(p.id) && timMonXungDot(p.ten, tenDangChon) !== null,
+  );
+
   return (
     <div>
       <h3 className={TIEU_DE}>Phụ kiện</h3>
       <p className="text-xs text-ink-soft mb-3">
         Tuỳ chọn, có thể chọn nhiều món. Bấm lại để bỏ chọn; không chọn nghĩa là không dùng.
       </p>
+
+      {coMonBiKhoa && (
+        <p className="mb-3 rounded-md bg-paper p-2.5 text-xs text-ink-soft" role="status">
+          <span aria-hidden>ⓘ </span>
+          Nón (Nón lá, Nón quai thao) không dùng cùng Khăn đóng hoặc Khăn mỏ quạ. Muốn đổi, hãy bỏ chọn món đang
+          chọn trước.
+        </p>
+      )}
 
       {cacMucCanhBao.length > 0 && (
         <div className="mb-4">
@@ -184,16 +198,21 @@ export default function ChonPhuKien({
               <div className="grid grid-cols-3 gap-2">
                 {nhom.danhSach.map((pk) => {
                   const dangChon = phuKienDangChon.includes(pk.id);
+                  const xungDot = dangChon ? null : timMonXungDot(pk.ten, tenDangChon);
                   return (
                     <button
                       key={pk.id}
                       type="button"
                       aria-pressed={dangChon}
+                      disabled={Boolean(xungDot)}
+                      title={xungDot ? `Không đi cùng ${xungDot}` : undefined}
                       onClick={() => batTat(pk.id)}
                       className={`relative flex flex-col gap-1 rounded-md border p-1.5 text-center transition ${
-                        dangChon
-                          ? 'border-lacquer bg-lacquer/10 shadow-sm'
-                          : 'border-ink-soft/20 bg-paper-raised/60 hover:border-gold hover:bg-paper-raised'
+                        xungDot
+                          ? 'cursor-not-allowed border-ink-soft/10 bg-paper-raised/30 opacity-50'
+                          : dangChon
+                            ? 'border-lacquer bg-lacquer/10 shadow-sm'
+                            : 'border-ink-soft/20 bg-paper-raised/60 hover:border-gold hover:bg-paper-raised'
                       }`}
                     >
                       <AnhPhuKien ten={pk.ten} />
@@ -210,10 +229,16 @@ export default function ChonPhuKien({
                       >
                         {pk.ten}
                       </span>
-                      {pk.vungMien && (
-                        <span className="block truncate text-[10px] leading-tight text-ink-soft">
-                          {pk.vungMien}
+                      {xungDot ? (
+                        <span className="block text-[10px] leading-tight text-ink-soft">
+                          Không đi cùng {xungDot}
                         </span>
+                      ) : (
+                        pk.vungMien && (
+                          <span className="block truncate text-[10px] leading-tight text-ink-soft">
+                            {pk.vungMien}
+                          </span>
+                        )
                       )}
                     </button>
                   );

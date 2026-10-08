@@ -10,11 +10,14 @@ import KetQuaPhoiDo from './KetQuaPhoiDo';
 import { saveLookbook } from '@/lib/localLookbook';
 import { taoNoiDungChiaSe, saoChepChiaSe } from '@/lib/chiaSe';
 import { layBoMau, chuanHoaTen } from '@/lib/mauTheoTrangPhuc';
-import { layPhuKienChoPhep, layNhomCuaPhuKien } from '@/lib/phuKienTheoTrangPhuc';
+import { layPhuKienChoPhep, layNhomCuaPhuKien, timMonXungDot } from '@/lib/phuKienTheoTrangPhuc';
 import { useDanhMuc } from '@/hooks/useDanhMuc';
-import type { KetQuaKiemTra, SuKien, ToHopAI } from '@/types/phoi-do';
+import type { KetQuaKiemTra, ToHopAI } from '@/types/phoi-do';
 import GioiThieuVanHoa from './GioiThieuVanHoa';
 import TienTrinhPhoiDo from './TienTrinhPhoiDo';
+
+/** Dịp dùng để sinh ảnh khi người dùng chưa chọn dịp (khớp với bộ ảnh làm sẵn cho demo). */
+const TEN_DIP_MAC_DINH = 'Tết';
 
 /** Đọc danh sách phụ kiện từ URL: ưu tiên `phuKienIds=a,b`, nếu không có thì dùng `phuKienId=a` (bản cũ). */
 function docPhuKienTuUrl(params: URLSearchParams): string[] {
@@ -45,8 +48,6 @@ export default function ThuNghiemPhoiDoClient() {
   const [dangSinhAnh, setDangSinhAnh] = useState(false);
   const [loiAnh, setLoiAnh] = useState<string | null>(null);
   const [dangDuyet, setDangDuyet] = useState(false);
-  // Dịp do hệ thống bốc ngẫu nhiên khi người dùng chưa chọn dịp (null nếu người dùng tự chọn).
-  const [suKienNgauNhien, setSuKienNgauNhien] = useState<SuKien | null>(null);
   // Mỗi lần bấm "Xem kết quả" / đổi lựa chọn tăng số này để bỏ qua phản hồi cũ đến muộn.
   const idYeuCau = useRef(0);
   // Khi có kết quả thì tự cuộn tới khu kết quả (trên điện thoại kết quả nằm dưới cùng, dễ bị bỏ sót).
@@ -79,9 +80,15 @@ export default function ThuNghiemPhoiDoClient() {
 
   const daChonDuDeXem = Boolean(trangPhucId && mauChinhId && mauPhuId);
 
-  // Dịp thực sự dùng để thẩm định + sinh ảnh: người dùng chọn, hoặc dịp ngẫu nhiên.
-  const suKienHieuLuc = suKienDangChon ?? suKienNgauNhien;
-  const danhSachSuKien = danhMuc.suKien;
+  // Dịp mặc định (Tết) chỉ dùng để sinh ảnh khi người dùng chưa chọn dịp.
+  // Thẩm định văn hoá KHÔNG dùng dịp này (chỉ dùng dịp người dùng tự chọn).
+  const dipMacDinh = suKienDangChon
+    ? null
+    : (danhMuc.suKien.find((sk) => chuanHoaTen(sk.ten) === chuanHoaTen(TEN_DIP_MAC_DINH)) ??
+      danhMuc.suKien[0] ??
+      null);
+  const dungDipMacDinh = dipMacDinh !== null;
+  const suKienHieuLuc = suKienDangChon ?? dipMacDinh;
   // Đã có ảnh AI thì bỏ hình minh hoạ phác thảo phía trên, chỉ giữ ảnh AI.
   const coAnhAI = Boolean(toHop?.imageUrl);
 
@@ -135,7 +142,6 @@ export default function ThuNghiemPhoiDoClient() {
     setDangSinhAnh(false);
     setLoiAnh(null);
     setDangDuyet(false);
-    setSuKienNgauNhien(null);
   }
 
   function boc<T>(setter: (giaTri: T) => void) {
@@ -148,11 +154,21 @@ export default function ThuNghiemPhoiDoClient() {
   /**
    * Bấm 1 phụ kiện:
    * - đang chọn -> bỏ chọn;
-   * - chưa chọn -> thêm vào; nếu nhóm của nó là "chỉ chọn 1" thì bỏ các món khác cùng nhóm.
+   * - chưa chọn -> thêm vào; nếu nhóm của nó là "chỉ chọn 1" thì bỏ các món khác cùng nhóm;
+   * - nón (Nón lá, Nón quai thao) và khăn đội đầu (Khăn đóng, Khăn mỏ quạ) không dùng cùng lúc:
+   *   thêm món xung đột thì bị từ chối (giao diện cũng đã khoá ô đó).
    */
   function xuLyBatTatPhuKien(id: string) {
     const phuKien = tatCaPhuKien.find((p) => p.id === id);
     if (!phuKien) return;
+
+    if (!phuKienIds.includes(id)) {
+      const xungDot = timMonXungDot(
+        phuKien.ten,
+        cacPhuKienDangChon.map((p) => p.ten),
+      );
+      if (xungDot) return;
+    }
 
     setPhuKienIds((truoc) => {
       if (truoc.includes(id)) return truoc.filter((x) => x !== id);
@@ -170,8 +186,7 @@ export default function ThuNghiemPhoiDoClient() {
     datLaiKetQua();
   }
 
-
-          /**
+  /**
    * Đổi trang phục:
    * - màu cũ còn hợp lệ thì giữ, không thì đặt về màu mặc định;
    * - phụ kiện giữ nguyên (món ít phù hợp sẽ bị Lớp 1 cảnh báo).
@@ -193,7 +208,6 @@ export default function ThuNghiemPhoiDoClient() {
     datLaiKetQua();
   }
 
-
   async function xuLyXemKetQua() {
     if (!trangPhucId || !mauChinhId || !mauPhuId) return;
     const idHienTai = ++idYeuCau.current;
@@ -202,20 +216,14 @@ export default function ThuNghiemPhoiDoClient() {
     setToHop(null);
     setLoiAnh(null);
 
-    // Chưa chọn dịp → bốc ngẫu nhiên 1 dịp để thẩm định và minh hoạ (có ghi chú cho người dùng).
-    let suKienDung: string | null = suKienId;
-    let ngauNhien: SuKien | null = null;
-    if (!suKienDung && danhSachSuKien.length > 0) {
-      ngauNhien = danhSachSuKien[Math.floor(Math.random() * danhSachSuKien.length)];
-      suKienDung = ngauNhien.id;
-    }
-    setSuKienNgauNhien(ngauNhien);
+    // Dịp dùng để sinh ảnh: người dùng chọn, hoặc dịp mặc định (Tết).
+    const suKienDungChoAnh = suKienHieuLuc?.id ?? null;
 
     try {
       const res = await fetch('/api/kiem-tra-phoi-do', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        // TẠM THỜI: server vẫn đọc `phuKienId` (món đầu tiên). `phuKienIds` gửi sẵn cho bước nâng cấp server.
+        // Thẩm định văn hoá CHỈ dùng dịp do người dùng chọn (null nếu chưa chọn).
         body: JSON.stringify({
           trangPhucId,
           mauChinhId,
@@ -230,7 +238,7 @@ export default function ThuNghiemPhoiDoClient() {
       setKetQua(body.data);
       // Có kết quả thẩm định rồi thì hiện ngay, ảnh AI sinh tiếp phía sau (10–20 giây).
       // Phụ kiện là tuỳ chọn (không chọn = ảnh không kèm phụ kiện) nên luôn sinh ảnh khi có dịp.
-      if (suKienDung) void sinhAnhAI(false, idHienTai, suKienDung);
+      if (suKienDungChoAnh) void sinhAnhAI(false, idHienTai, suKienDungChoAnh);
     } catch (err) {
       if (idHienTai === idYeuCau.current) {
         setLoiKiemTra(err instanceof Error ? err.message : 'Không thể thẩm định lúc này');
@@ -279,15 +287,10 @@ export default function ThuNghiemPhoiDoClient() {
   /**
    * Lưu bộ phối và ảnh AI vào Lookbook cá nhân.
    * Việc duyệt tổ hợp trong database do admin thực hiện.
+   * Lưu ý: trường `suKienNgauNhien` giữ tên cũ để tương thích Lookbook; nay nghĩa là "dịp do hệ thống chọn mặc định".
    */
   function xuLyDuyetAnh() {
-    if (
-      !toHop ||
-      !trangPhucId ||
-      !mauChinhId ||
-      !mauPhuId ||
-      !ketQua
-    ) {
+    if (!toHop || !trangPhucId || !mauChinhId || !mauPhuId || !ketQua) {
       return;
     }
 
@@ -297,10 +300,10 @@ export default function ThuNghiemPhoiDoClient() {
       saveLookbook({
         trangPhucId,
         suKienId: suKienHieuLuc?.id ?? null,
-        suKienNgauNhien: suKienNgauNhien !== null,
+        suKienNgauNhien: dungDipMacDinh,
         mauChinhId,
         mauPhuId,
-         phuKienId: phuKienDauTien?.id ?? null,
+        phuKienId: phuKienDauTien?.id ?? null,
         phuKienIds,
         ketQuaKiemTra: ketQua,
         imageUrl: toHop.imageUrl,
@@ -310,9 +313,7 @@ export default function ThuNghiemPhoiDoClient() {
       setDaLuu(true);
     } catch (error) {
       setLoiAnh(
-        error instanceof Error
-          ? error.message
-          : "Không thể lưu bộ phối vào Lookbook cá nhân."
+        error instanceof Error ? error.message : 'Không thể lưu bộ phối vào Lookbook cá nhân.',
       );
     }
   }
@@ -327,7 +328,7 @@ export default function ThuNghiemPhoiDoClient() {
   }
 
   function xuLySinhLaiAnh() {
-    // Giữ nguyên dịp đã dùng (kể cả dịp ngẫu nhiên) để "Sinh ảnh khác" chỉ đổi ảnh, không đổi dịp.
+    // Giữ nguyên dịp đã dùng (kể cả dịp mặc định) để "Sinh ảnh khác" chỉ đổi ảnh, không đổi dịp.
     if (suKienHieuLuc) void sinhAnhAI(true, ++idYeuCau.current, suKienHieuLuc.id);
   }
 
@@ -336,7 +337,7 @@ export default function ThuNghiemPhoiDoClient() {
     saveLookbook({
       trangPhucId,
       suKienId: suKienHieuLuc?.id ?? null,
-      suKienNgauNhien: suKienNgauNhien !== null,
+      suKienNgauNhien: dungDipMacDinh,
       mauChinhId,
       mauPhuId,
       phuKienId: phuKienDauTien?.id ?? null,
@@ -372,8 +373,8 @@ export default function ThuNghiemPhoiDoClient() {
 
       <div className="grid grid-cols-1 lg:grid-cols-[280px_minmax(0,1fr)_300px] lg:grid-rows-[minmax(0,1fr)] gap-6 lg:flex-1 lg:min-h-0">
         {/* Cột trái: Chọn trang phục & bối cảnh */}
-        <aside className="order-1 lg:order-none space-y-8 lg:min-h-0 lg:overflow-y-auto p-1">
-            <ChonTrangPhuc
+        <aside className="order-1 lg:order-0 space-y-8 lg:min-h-0 lg:overflow-y-auto p-1">
+          <ChonTrangPhuc
             danhSachTrangPhuc={danhMuc.trangPhuc}
             danhSachSuKien={danhMuc.suKien}
             trangPhucDangChon={trangPhucId}
@@ -394,9 +395,9 @@ export default function ThuNghiemPhoiDoClient() {
         </aside>
 
         {/* Cột giữa: Khu xem trước (co giãn theo khung) + nút thẩm định luôn nằm cuối */}
-        <section className="order-3 lg:order-none bg-paper-raised rounded-md flex flex-col lg:min-h-0 lg:overflow-y-auto">
+        <section className="order-3 lg:order-0 bg-paper-raised rounded-md flex flex-col lg:min-h-0 lg:overflow-y-auto">
           {/* Có ảnh AI rồi thì xoá phần hình minh hoạ phác thảo ở trên */}
-                    {!coAnhAI && (
+          {!coAnhAI && (
             <>
               <div className="relative flex-1 min-h-105 lg:min-h-75">
                 <XemTruoc
@@ -458,38 +459,38 @@ export default function ThuNghiemPhoiDoClient() {
 
           {ketQua && (
             <div ref={khuKetQuaRef} className="scroll-mt-16">
-            <KetQuaPhoiDo
-              ketQua={ketQua}
-              chuaChonDip={!suKienId}
-              cacPhuKien={cacPhuKienDangChon}
-              daLuu={daLuu}
-              daSaoChep={daSaoChep}
-              onLuu={xuLyLuu}
-              onChiaSe={xuLyChiaSe}
-              anhAI={{
-                thieuThongTin: !suKienHieuLuc,
-                tenSuKien: suKienHieuLuc?.ten ?? null,
-                suKienNgauNhien: suKienNgauNhien !== null,
-                tenPhuKien:
-                  cacPhuKienDangChon.length > 0
-                    ? cacPhuKienDangChon.map((p) => p.ten).join(', ')
-                    : null,
-                dangSinh: dangSinhAnh,
-                loi: loiAnh,
-                toHop,
-                dangDuyet,
-                daLuu,
-                onDuyet: xuLyDuyetAnh,
-                onKhongDuyet: xuLyKhongDuyetAnh,
-                onSinhLai: xuLySinhLaiAnh,
-              }}
-            />
+              <KetQuaPhoiDo
+                ketQua={ketQua}
+                chuaChonDip={!suKienId}
+                cacPhuKien={cacPhuKienDangChon}
+                daLuu={daLuu}
+                daSaoChep={daSaoChep}
+                onLuu={xuLyLuu}
+                onChiaSe={xuLyChiaSe}
+                anhAI={{
+                  thieuThongTin: !suKienHieuLuc,
+                  tenSuKien: suKienHieuLuc?.ten ?? null,
+                  suKienMacDinh: dungDipMacDinh,
+                  tenPhuKien:
+                    cacPhuKienDangChon.length > 0
+                      ? cacPhuKienDangChon.map((p) => p.ten).join(', ')
+                      : null,
+                  dangSinh: dangSinhAnh,
+                  loi: loiAnh,
+                  toHop,
+                  dangDuyet,
+                  daLuu,
+                  onDuyet: xuLyDuyetAnh,
+                  onKhongDuyet: xuLyKhongDuyetAnh,
+                  onSinhLai: xuLySinhLaiAnh,
+                }}
+              />
             </div>
           )}
         </section>
 
         {/* Cột phải: Tùy chỉnh màu sắc & phụ kiện */}
-        <aside className="order-2 lg:order-none space-y-6 lg:min-h-0 lg:overflow-y-auto p-1">
+        <aside className="order-2 lg:order-0 space-y-6 lg:min-h-0 lg:overflow-y-auto p-1">
           <BangMau
             danhSachMauChinh={danhSachMauChinh}
             danhSachMauPhu={danhSachMauPhu}
@@ -499,7 +500,7 @@ export default function ThuNghiemPhoiDoClient() {
             onChonMauChinh={boc(setMauChinhId)}
             onChonMauPhu={boc(setMauPhuId)}
           />
-           <ChonPhuKien
+          <ChonPhuKien
             danhSachPhuKien={danhSachPhuKienHienThi}
             tenPhuKienPhuHop={tenPhuKienChoPhep ?? []}
             tenTrangPhuc={trangPhucDangChon?.ten ?? null}

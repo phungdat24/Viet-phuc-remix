@@ -7,14 +7,16 @@ import GhiChuAnhAI from './GhiChuAnhAI';
 export interface AnhAIProps {
   /** true khi không có dịp nào để dùng (danh mục dịp rỗng) → không thể sinh ảnh AI */
   thieuThongTin: boolean;
-  /** Dịp dùng để sinh ảnh (do người dùng chọn hoặc bốc ngẫu nhiên). */
+  /** Dịp dùng để sinh ảnh (do người dùng chọn hoặc dịp mặc định). */
   tenSuKien: string | null;
-  /** true khi người dùng chưa chọn dịp và hệ thống bốc ngẫu nhiên. */
-  suKienNgauNhien: boolean;
+  /** true khi người dùng chưa chọn dịp và hệ thống dùng dịp mặc định (Tết). */
+  suKienMacDinh: boolean;
   /** null = không chọn phụ kiện. */
   tenPhuKien: string | null;
   /** Cảnh báo sai phạm văn hoá (hiện khung đỏ dưới ảnh). null = không có cảnh báo. */
   canhBaoVanHoa?: string | null;
+  /** true = ẩn nhận xét do AI viết (khi Lớp 1 đang cảnh báo hoặc có món chưa kiểm chứng). */
+  anNhanXet?: boolean;
   dangSinh: boolean;
   loi: string | null;
   toHop: ToHopAI | null;
@@ -28,9 +30,10 @@ export interface AnhAIProps {
 export default function SinhAnhAI({
   thieuThongTin,
   tenSuKien,
-  suKienNgauNhien,
+  suKienMacDinh,
   tenPhuKien,
   canhBaoVanHoa = null,
+  anNhanXet = false,
   dangSinh,
   loi,
   toHop,
@@ -75,6 +78,7 @@ export default function SinhAnhAI({
 
   const daDuyet = toHop.status === 'approved';
   const biTuChoi = toHop.status === 'rejected';
+  const nhanXet = toHop.aiAssessment?.nhanXetAI ?? null;
 
   return (
     <div className="mt-3 space-y-3">
@@ -89,10 +93,10 @@ export default function SinhAnhAI({
 
       {toHop.imageUrl && <GhiChuAnhAI />}
 
-      {suKienNgauNhien && tenSuKien && (
+      {suKienMacDinh && tenSuKien && (
         <p className="text-xs text-ink-soft bg-paper rounded-md p-3">
-          Bạn chưa chọn dịp nên hệ thống chọn ngẫu nhiên dịp <strong>{tenSuKien}</strong> để minh hoạ ảnh này. Muốn
-          dịp khác, hãy chọn ở khung bên trái rồi xem lại kết quả.
+          Bạn chưa chọn dịp nên ảnh được vẽ theo dịp mặc định là <strong>{tenSuKien}</strong>. Muốn dịp khác, hãy
+          chọn ở khung bên trái rồi xem lại kết quả.
         </p>
       )}
       {!tenPhuKien && (
@@ -101,9 +105,20 @@ export default function SinhAnhAI({
         </p>
       )}
 
-      {toHop.aiAssessment?.nhanXetAI && (
-        <p className="text-sm text-ink-soft italic">“{toHop.aiAssessment.nhanXetAI}”</p>
-      )}
+      {nhanXet &&
+        (anNhanXet ? (
+          <p className="text-xs text-ink-soft bg-paper rounded-md p-3">
+            Nhận xét của AI được ẩn vì bộ phối này có điểm cần lưu ý về văn hoá. Hãy xem mục &quot;Chuẩn mực văn
+            hoá&quot; phía trên.
+          </p>
+        ) : (
+          <div>
+            <p className="text-sm text-ink-soft italic">“{nhanXet}”</p>
+            <p className="mt-1 text-[11px] text-ink-soft">
+              Nhận xét do AI viết về phối màu và phong cách, không phải kết luận về văn hoá.
+            </p>
+          </div>
+        ))}
 
       {canhBaoVanHoa && (
         <div

@@ -104,7 +104,7 @@ export default async function TrangChiTietVanHoa({ params }: Props) {
           <ol className="relative ml-2 mt-5 space-y-4 border-l-2 border-gold/40">
             {muc.hanhTrinh.map((h) => (
               <li key={h.moc} className="ml-5">
-                <span aria-hidden className="absolute -left-[7px] mt-1.5 h-3 w-3 rounded-full border-2 border-gold bg-paper" />
+                <span aria-hidden className="absolute -left-1.75 mt-1.5 h-3 w-3 rounded-full border-2 border-gold bg-paper" />
                 <p className="text-xs font-semibold uppercase tracking-wide text-gold">{h.moc}</p>
                 <p className="text-sm leading-relaxed text-ink">
                   {h.y.n}

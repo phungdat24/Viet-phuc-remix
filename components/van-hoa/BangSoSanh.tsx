@@ -3,7 +3,7 @@ import { BANG_SO_SANH } from '@/lib/vanHoa/duLieu';
 export default function BangSoSanh() {
   return (
     <div className="overflow-x-auto rounded-md border border-ink-soft/15">
-      <table className="w-full min-w-[640px] border-collapse text-left text-sm">
+      <table className="w-full min-w-160 border-collapse text-left text-sm">
         <caption className="sr-only">So sánh nhanh năm kiểu áo truyền thống</caption>
         <thead className="bg-paper-raised">
           <tr>
