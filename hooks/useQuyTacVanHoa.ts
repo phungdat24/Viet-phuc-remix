@@ -5,6 +5,8 @@ import type { QuyTacVanHoa } from '@/types/phoi-do';
 
 /** Bộ nhớ tạm: đã tải của trang phục nào thì không gọi lại. */
 const boNho = new Map<string, QuyTacVanHoa[]>();
+/** Yêu cầu đang chạy: nhiều component cùng cần một trang phục thì chỉ gọi mạng một lần. */
+const dangChay = new Map<string, Promise<QuyTacVanHoa[]>>();
 
 /**
  * Tải quy tắc văn hoá của một trang phục.
@@ -20,12 +22,19 @@ export function useQuyTacVanHoa(trangPhucId: string | null) {
     if (!trangPhucId || boNho.has(trangPhucId)) return;
     let huy = false;
 
-    fetch(`/api/quy-tac-van-hoa?trangPhucId=${encodeURIComponent(trangPhucId)}`)
-      .then(async (res) => {
-        const body = await res.json();
-        if (!res.ok) throw new Error(body.error ?? `Lỗi ${res.status}`);
-        return body.data as QuyTacVanHoa[];
-      })
+    let yeuCau = dangChay.get(trangPhucId);
+    if (!yeuCau) {
+      yeuCau = fetch(`/api/quy-tac-van-hoa?trangPhucId=${encodeURIComponent(trangPhucId)}`)
+        .then(async (res) => {
+          const body = await res.json();
+          if (!res.ok) throw new Error(body.error ?? `Lỗi ${res.status}`);
+          return body.data as QuyTacVanHoa[];
+        })
+        .finally(() => dangChay.delete(trangPhucId));
+      dangChay.set(trangPhucId, yeuCau);
+    }
+
+    yeuCau
       .then((ds) => {
         boNho.set(trangPhucId, ds);
         if (!huy) veLai((n) => n + 1);

@@ -6,12 +6,15 @@ import ChonTrangPhuc from './ChonTrangPhuc';
 import BangMau from './BangMau';
 import ChonPhuKien from './ChonPhuKien';
 import XemTruoc from './XemTruoc';
+import HuyHieuVanHoa, { type MucLuuYVanHoa } from './HuyHieuVanHoa';
 import KetQuaPhoiDo from './KetQuaPhoiDo';
 import { saveLookbook } from '@/lib/localLookbook';
 import { taoNoiDungChiaSe, saoChepChiaSe } from '@/lib/chiaSe';
 import { layBoMau, chuanHoaTen } from '@/lib/mauTheoTrangPhuc';
 import { layPhuKienChoPhep, layNhomCuaPhuKien, timMonXungDot } from '@/lib/phuKienTheoTrangPhuc';
 import { useDanhMuc } from '@/hooks/useDanhMuc';
+import { useQuyTacVanHoa } from '@/hooks/useQuyTacVanHoa';
+import { tinhMucDoMotMon } from '@/lib/canhBaoVanHoa';
 import type { KetQuaKiemTra, ToHopAI } from '@/types/phoi-do';
 import GioiThieuVanHoa from './GioiThieuVanHoa';
 import TienTrinhPhoiDo from './TienTrinhPhoiDo';
@@ -36,6 +39,8 @@ export default function ThuNghiemPhoiDoClient() {
   const [mauChinhId, setMauChinhId] = useState<string | null>(searchParams.get('mauChinhId'));
   const [mauPhuId, setMauPhuId] = useState<string | null>(searchParams.get('mauPhuId'));
   const [phuKienIds, setPhuKienIds] = useState<string[]>(() => docPhuKienTuUrl(searchParams));
+  // Quy tắc văn hoá của trang phục đang chọn (dùng cho huy hiệu cảnh báo ở khung xem trước).
+  const { quyTac: quyTacVanHoa } = useQuyTacVanHoa(trangPhucId);
 
   const [ketQua, setKetQua] = useState<KetQuaKiemTra | null>(null);
   const [dangKiemTra, setDangKiemTra] = useState(false);
@@ -77,6 +82,15 @@ export default function ThuNghiemPhoiDoClient() {
     .filter((p): p is (typeof tatCaPhuKien)[number] => Boolean(p));
   // Tương thích tạm: các nơi chưa hỗ trợ nhiều phụ kiện dùng món đầu tiên.
   const phuKienDauTien = cacPhuKienDangChon[0] ?? null;
+
+  // Mức văn hoá của từng món đang chọn, theo dịp NGƯỜI DÙNG chọn (không tính dịp mặc định Tết,
+  // cùng cách tính với khung Phụ kiện). Món xung đột đã bị chặn nên không bao giờ lọt vào đây.
+  const cacMucLuuY: MucLuuYVanHoa[] = quyTacVanHoa
+    ? cacPhuKienDangChon.map((p) => {
+        const kq = tinhMucDoMotMon(quyTacVanHoa, p.id, suKienId);
+        return { id: p.id, ten: p.ten, mucDo: kq.mucDo, lyDo: kq.lyDo };
+      })
+    : [];
 
   const daChonDuDeXem = Boolean(trangPhucId && mauChinhId && mauPhuId);
 
@@ -406,6 +420,7 @@ export default function ThuNghiemPhoiDoClient() {
                   mauPhu={mauPhuDangChon}
                   cacPhuKien={cacPhuKienDangChon}
                 />
+                <HuyHieuVanHoa cacMuc={cacMucLuuY} />
               </div>
 
               {trangPhucDangChon && (

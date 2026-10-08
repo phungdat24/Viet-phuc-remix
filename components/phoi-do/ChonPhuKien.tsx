@@ -5,7 +5,7 @@ import type { MucDoVanHoa, PhuKien } from '@/types/phoi-do';
 import { NHOM_PHU_KIEN, chuanHoaTenPhuKien, timMonXungDot } from '@/lib/phuKienTheoTrangPhuc';
 import { layAnhPhuKien } from '@/lib/anhPhuKien';
 import { useQuyTacVanHoa } from '@/hooks/useQuyTacVanHoa';
-import { tinhMucDoMotMon, timMonThayThe } from '@/lib/canhBaoVanHoa';
+import { CAU_NHAC_CHON_DIP, LY_DO_HOP_CO_DIEU_KIEN, tinhMucDoMotMon, timMonThayThe } from '@/lib/canhBaoVanHoa';
 import CanhBaoVanHoa, { type MucCanhBaoVanHoa } from './CanhBaoVanHoa';
 
 interface Props {
@@ -120,11 +120,11 @@ export default function ChonPhuKien({
         lyDoGoc ??
         `Nét này thường gắn với phong cách khác, nên có thể làm lệch đặc trưng gốc của ${tenTrangPhuc ?? 'trang phục này'}. Bạn vẫn có thể giữ lại nếu muốn.`;
     } else {
-      lyDo = lyDoGoc ?? 'Món này hợp hay không còn tuỳ dịp.';
+      lyDo = lyDoGoc ?? LY_DO_HOP_CO_DIEU_KIEN;
       if (!rieng) {
         lyDo += suKienId
-          ? ' Hiện chưa có quy tắc riêng cho dịp bạn chọn.'
-          : ' Hãy chọn thêm dịp sử dụng ở khung bên trái để có kết quả rõ hơn.';
+          ? ' Chưa có quy tắc riêng cho dịp bạn chọn, nên đây là nhận xét chung.'
+          : ` ${CAU_NHAC_CHON_DIP}`;
       }
     }
 
@@ -135,7 +135,11 @@ export default function ChonPhuKien({
       mucDo,
       lyDo,
       thayThe: quyTac
-        ? timMonThayThe(quyTac, p, danhSachPhuKien, suKienId).map((t) => ({ id: t.id, ten: t.ten }))
+        ? timMonThayThe(quyTac, p, danhSachPhuKien, suKienId)
+            // Không gợi ý món sẽ bị chặn vì xung đột với các món còn lại (nón với khăn đóng / khăn mỏ quạ),
+            // nếu không nút "Thay bằng …" bấm vào sẽ không có tác dụng.
+            .filter((t) => timMonXungDot(t.ten, tenDangChon.filter((ten) => ten !== p.ten)) === null)
+            .map((t) => ({ id: t.id, ten: t.ten }))
         : [],
     });
   }
