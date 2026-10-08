@@ -1,7 +1,9 @@
 'use client';
 
+import { useState } from 'react';
 import type { PhuKien } from '@/types/phoi-do';
 import { NHOM_PHU_KIEN, chuanHoaTenPhuKien } from '@/lib/phuKienTheoTrangPhuc';
+import { layAnhPhuKien } from '@/lib/anhPhuKien';
 
 interface Props {
   danhSachPhuKien: PhuKien[];
@@ -15,6 +17,36 @@ interface Props {
 }
 
 const TIEU_DE = 'font-display text-sm font-semibold text-ink-soft uppercase tracking-wide mb-3';
+
+/** Khung ảnh vuông của một phụ kiện; chưa có ảnh hoặc ảnh lỗi thì hiện ký hiệu thay thế. */
+function AnhPhuKien({ ten }: { ten: string }) {
+  const [anhLoi, setAnhLoi] = useState(false);
+  const duongDan = layAnhPhuKien(ten);
+
+  return (
+    <div className="aspect-square w-full overflow-hidden rounded bg-paper">
+      {duongDan && !anhLoi ? (
+        // eslint-disable-next-line @next/next/no-img-element
+        <img
+          src={duongDan}
+          alt=""
+          width={256}
+          height={256}
+          loading="lazy"
+          onError={() => setAnhLoi(true)}
+          className="h-full w-full object-contain"
+        />
+      ) : (
+        <div
+          aria-hidden
+          className="flex h-full w-full items-center justify-center text-2xl text-ink-soft/40"
+        >
+          ✦
+        </div>
+      )}
+    </div>
+  );
+}
 
 export default function ChonPhuKien({
   danhSachPhuKien,
@@ -65,9 +97,9 @@ export default function ChonPhuKien({
         >
           <p className="font-medium text-lacquer">⚠ Cần lưu ý về văn hoá</p>
           <p className="mt-1">
-            {monItPhuHopDaChon.map((p) => p.ten).join(', ')}{' '}
-            {monItPhuHopDaChon.length > 1 ? 'ít' : 'ít'} phù hợp với {tenTrangPhuc ?? 'trang phục này'}.
-            Bạn vẫn có thể giữ lại, bấm &quot;Xem kết quả&quot; để đọc giải thích chi tiết.
+            {monItPhuHopDaChon.map((p) => p.ten).join(', ')} ít phù hợp với{' '}
+            {tenTrangPhuc ?? 'trang phục này'}. Bạn vẫn có thể giữ lại, bấm &quot;Xem kết quả&quot; để
+            đọc giải thích chi tiết.
           </p>
         </div>
       )}
@@ -87,19 +119,36 @@ export default function ChonPhuKien({
                 {nhom.danhSach.map((pk) => {
                   const dangChon = phuKienDangChon.includes(pk.id);
                   return (
-                      <button
+                    <button
                       key={pk.id}
                       type="button"
                       aria-pressed={dangChon}
                       onClick={() => onBatTatPhuKien(pk.id)}
-                      className={`rounded-md border px-2 py-2 text-xs text-center transition ${
+                      className={`relative flex flex-col gap-1 rounded-md border p-1.5 text-center transition ${
                         dangChon
-                          ? 'border-lacquer bg-lacquer/10 font-medium text-ink shadow-sm'
+                          ? 'border-lacquer bg-lacquer/10 shadow-sm'
                           : 'border-ink-soft/20 bg-paper-raised/60 hover:border-gold hover:bg-paper-raised'
                       }`}
                     >
-                      {dangChon && <span aria-hidden>✓ </span>}
-                      {pk.ten}
+                      <AnhPhuKien ten={pk.ten} />
+                      {dangChon && (
+                        <span
+                          aria-hidden
+                          className="absolute right-1 top-1 flex h-5 w-5 items-center justify-center rounded-full bg-lacquer text-[11px] font-bold text-white"
+                        >
+                          ✓
+                        </span>
+                      )}
+                      <span
+                        className={`block text-[11px] leading-tight text-ink ${dangChon ? 'font-semibold' : 'font-medium'}`}
+                      >
+                        {pk.ten}
+                      </span>
+                      {pk.vungMien && (
+                        <span className="block truncate text-[10px] leading-tight text-ink-soft">
+                          {pk.vungMien}
+                        </span>
+                      )}
                     </button>
                   );
                 })}
