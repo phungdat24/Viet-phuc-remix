@@ -8,7 +8,7 @@ export default function DongThoiGian() {
         <li key={`${m.moc}-${m.tieuDe}`} className="ml-6">
           <span
             aria-hidden
-            className="absolute -left-2.25 mt-1.5 h-4 w-4 rounded-full border-2 border-gold bg-paper"
+            className="absolute -left-[9px] mt-1.5 h-4 w-4 rounded-full border-2 border-gold bg-paper"
           />
           <p className="text-xs font-semibold uppercase tracking-wide text-gold">
             {m.moc}

@@ -57,8 +57,10 @@ export interface MucVanHoa {
   /** Các quan điểm khác nhau / điều chưa chắc. */
   conTranhLuan: YCoNguon[];
   trangThai: TrangThaiXacMinh;
-  /** Có nội dung = hiện banner đỏ ở đầu trang. */
+  /** Có nội dung = hiện banner ĐỎ ở đầu trang (dùng cho mục chưa kiểm chứng). */
   canhBaoDo?: string;
+  /** Có nội dung = hiện khung lưu ý VÀNG về phạm vi/giới hạn của nguồn (không phải cảnh báo đỏ). */
+  luuY?: string;
   nguon: NguonThamKhao[];
   lienQuan: string[];
   phoiThu?: { trangPhuc: string; phuKien?: string[]; ghiChu?: string };
@@ -256,6 +258,48 @@ const N = {
     donVi: 'MIA.vn',
     url: 'https://mia.vn/cam-nang-du-lich/chiec-khan-ran-nam-bo-16805',
     loai: 'pho-thong',
+  },
+  tuoiTreGuoc: {
+    tieuDe: 'Woman spends 3 decades making traditional clogs by hand in Vietnam',
+    donVi: 'Tuoi Tre News, 15/08/2023 (nghệ nhân làm guốc mộc ở Vĩnh Long)',
+    url: 'https://news.tuoitre.vn/woman-spends-3-decades-making-traditional-clogs-by-hand-in-vietnam-10374958.htm',
+    loai: 'bao-chi',
+  },
+  heritageTram: {
+    tieuDe: 'Bộ sưu tập trang sức hiếm thời chúa Nguyễn (1558–1777) tại Bảo tàng Lịch sử Quốc gia',
+    donVi: 'Tạp chí Heritage (Vietnam Airlines) — dẫn Khâm định Đại Nam hội điển sự lệ',
+    url: 'https://heritagevietnamairlines.com/?p=17211',
+    loai: 'bao-chi',
+  },
+  gdvnTram: {
+    tieuDe: 'Chùm ảnh: Bộ bảo vật cung đình “siêu quí hiếm” làm từ vàng ròng',
+    donVi: 'Báo Giáo dục Việt Nam, 28/07/2012',
+    url: 'https://giaoduc.net.vn/tieu-diem/chum-anh-bo-bao-vat-cung-dinh-sieu-qui-hiem-lam-tu-vang-rong-post77364.gd',
+    loai: 'bao-chi',
+  },
+  vietnamPlusQuat: {
+    tieuDe: 'Về Chàng Sơn tìm hiểu nghề làm ra gió hơn 200 năm',
+    donVi: 'VietnamPlus',
+    url: 'https://www.vietnamplus.vn/ve-chang-son-tim-hieu-nghe-lam-ra-gio-hon-200-nam-post1127060.vnp',
+    loai: 'bao-chi',
+  },
+  congThuongQuatTay: {
+    tieuDe: 'Câu chuyện về những chiếc quạt tay',
+    donVi: 'Tạp chí Công Thương',
+    url: 'https://tapchicongthuong.vn/cau-chuyen-ve-nhung-chiec-quat-tay-1653.htm',
+    loai: 'bao-chi',
+  },
+  congThuongChangSon: {
+    tieuDe: 'Quạt giấy Chàng Sơn: Bảo tồn nét văn hóa xưa',
+    donVi: 'Tạp chí Công Thương',
+    url: 'https://tapchicongthuong.vn/quat-giay-chang-son--bao-ton-net-van-hoa-xua-26149.htm',
+    loai: 'bao-chi',
+  },
+  sggpThuongBaBa: {
+    tieuDe: 'Thương áo bà ba',
+    donVi: 'Báo Sài Gòn Giải Phóng',
+    url: 'https://www.sggp.org.vn/thuong-ao-ba-ba-post710827.html',
+    loai: 'bao-chi',
   },
   luatMinhKhue: {
     tieuDe: 'Trình bày ý kiến về việc bảo tồn một loại hình nghệ thuật, trang phục truyền thống',
@@ -463,7 +507,7 @@ export const CAC_MUC: MucVanHoa[] = [
     slug: 'ao-tu-than',
     ten: 'Áo tứ thân',
     nhom: 'trang-phuc',
-    vung: 'Bắc Bộ (Kinh Bắc)',
+    vung: 'Bắc Bộ (gắn nhiều với quan họ Kinh Bắc)',
     thoiKy: 'Nhiều thế kỷ trước áo dài; còn phổ biến ở nông thôn Bắc Bộ đến giữa thế kỷ XX',
     tomTat:
       'Áo dài không khuy, mở dọc phía trước, hai tà trước buộc lại ở eo. Áo của phụ nữ lao động Bắc Bộ, mặc cùng váy, yếm và thắt lưng lụa.',
@@ -545,6 +589,7 @@ export const CAC_MUC: MucVanHoa[] = [
     ],
     nguoiMacDip: [
       y('Chủ yếu nữ giới; áo dài ngũ thân của nam là hệ riêng.', 4),
+      y('Áo dài có thể được phối cùng nón lá hoặc khăn vấn.', 2),
       y('Từ tháng 9/2020, Sở Văn hoá – Thể thao Thừa Thiên Huế cho cán bộ mặc áo dài vào thứ Hai đầu mỗi tháng, một ví dụ về việc đưa áo dài vào đời sống công sở.', 4),
     ],
     conTranhLuan: [
@@ -565,7 +610,7 @@ export const CAC_MUC: MucVanHoa[] = [
     thoiKy: 'Phổ biến mạnh cuối thế kỷ XIX – đầu thế kỷ XX',
     tomTat:
       'Bộ áo ngắn và quần của người Nam Bộ: gọn, thoáng, hợp sông nước. Nguồn gốc vẫn là chủ đề tranh luận.',
-    nguon: [N.baBaChauThuyAn, N.kebaya, N.vietnamTourism],
+    nguon: [N.baBaChauThuyAn, N.kebaya, N.vietnamTourism, N.sggpThuongBaBa],
     coTuThoiNao: [
       y('Nghiên cứu mới nhất đã đọc nhấn mạnh việc tìm nguồn gốc áo bà ba là hành trình phức tạp, với nhiều giả thuyết đan xen; rất có thể là kết quả của giao thoa văn hoá và quá trình thích ứng lâu dài.', 1),
       y('Giai đoạn phát triển mạnh và phổ biến nhất là cuối thế kỷ XIX đến đầu thế kỷ XX; khi ấy áo gần như không thể thiếu của người Nam Bộ, nhất là nông dân đồng bằng sông Cửu Long.', 1),
@@ -595,6 +640,7 @@ export const CAC_MUC: MucVanHoa[] = [
     ],
     nguoiMacDip: [
       y('Cả nam lẫn nữ ở đồng bằng sông Cửu Long, chủ yếu nông dân; áo mặc đi chơi, đi lễ hội hoặc của nhà khá giả có thể bằng lụa tơ tằm.', 1, 3),
+      y('Các chị em lái xuồng, buôn bán, chở khách du lịch ở miệt vườn sông nước vẫn mặc áo bà ba, quàng khăn rằn và đội nón lá.', 4),
     ],
     conTranhLuan: [
       y('Giả thuyết 1: liên hệ với kebaya của người Peranakan (Baba–Nyonya). Nhà văn Sơn Nam ghi người Nam Kỳ xưa chuộng áo vải đen của người “Bà-ba”, từ đó có tên “áo bà ba”; thời điểm du nhập ghi là cuối thế kỷ XIX (nghiên cứu này) hoặc giữa thế kỷ XIX (nguồn Tạp chí Dân tộc học).', 1, 2),
@@ -618,7 +664,7 @@ export const CAC_MUC: MucVanHoa[] = [
     thoiKy: 'Lâu đời (chưa xác định mốc cụ thể)',
     tomTat:
       'Chiếc nón dáng chóp bằng lá, che nắng mưa và làm quạt; mỗi vùng một kiểu, tinh tế nhất là nón bài thơ Huế.',
-    nguon: [N.wikiNonLa, N.hoaTieuNon, N.baoTangHaNoi, N.trinhBach],
+    nguon: [N.wikiNonLa, N.hoaTieuNon, N.baoTangHaNoi, N.trinhBach, N.wikiAoDai],
     coTuThoiNao: [
       y('Chưa tìm được nguồn xác định chính xác nón lá có từ bao giờ. Một số tài liệu phổ thông cho rằng hình ảnh nón đã có trên đồ đồng Đông Sơn; nhóm chưa thấy nguồn khảo cổ xác nhận nên không dùng làm khẳng định.', 2),
       y('Theo truyền thuyết lịch sử do sử gia Phan Khoang ghi lại, Đào Duy Từ (1572–1634) khuyên chúa Nguyễn Phúc Nguyên cho dân Đàng Trong “bỏ nón thượng đội nón chóp” để khác với Đàng Ngoài. Nón lá thuộc nhóm nón chóp.', 4),
@@ -641,6 +687,7 @@ export const CAC_MUC: MucVanHoa[] = [
     ],
     nguoiMacDip: [
       y('Dùng rộng rãi trong đời sống thường ngày; nón cụ gắn với đám cưới Nam Bộ.', 1, 2),
+      y('Wikipedia ghi nhận áo dài có thể được phối cùng nón lá và kèm ảnh người phụ nữ mặc áo dài đội nón lá.', 5),
     ],
     conTranhLuan: [
       y('Mốc xuất hiện của nón lá và quan hệ của nó với hình ảnh trên đồ đồng Đông Sơn chưa có nguồn khảo cổ xác nhận.', 2),
@@ -738,17 +785,141 @@ export const CAC_MUC: MucVanHoa[] = [
     phoiThu: { trangPhuc: 'Áo tứ thân', phuKien: ['Yếm đào'] },
   },
 
+  // ================================================================= TRÂM CÀI
+  {
+    slug: 'tram-cai',
+    ten: 'Trâm cài',
+    tenKhac: 'trâm cài đầu',
+    nhom: 'phu-kien',
+    vung: 'Cung đình Huế (nguồn hiện có)',
+    thoiKy: 'Hiện vật thế kỷ XVIII – XIX (cung đình)',
+    tomTat:
+      'Trâm cài đầu bằng vàng hoặc bạc dùng trong cung đình thời chúa Nguyễn và triều Nguyễn. Các nguồn hiện có chỉ nói về trâm cung đình, chưa nói về trâm của dân thường.',
+    luuY:
+      'Phạm vi nguồn: toàn bộ nguồn hiện có nói về trâm VÀNG, BẠC của cung đình triều Nguyễn. Chưa có nguồn đáng tin nói về trâm cài của dân thường, hay về cách phối trâm với áo dài, áo tứ thân, áo bà ba.',
+    nguon: [N.heritageTram, N.gdvnTram],
+    coTuThoiNao: [
+      y('Hiện vật trâm cài đầu bằng vàng ròng và bạc thời chúa Nguyễn (thế kỷ XVIII) được giới thiệu trong bộ sưu tập trang sức hiếm tại Bảo tàng Lịch sử Quốc gia, trong đó có trâm hình chim phượng.', 1, 2),
+      y('Theo Khâm định Đại Nam hội điển sự lệ, mũ và trâm vàng trang trí hình phượng, cùng trâm vàng có hoa văn hoa, được dành riêng cho phụ nữ trong hoàng tộc.', 1),
+    ],
+    hanhTrinh: [
+      moc('Thế kỷ XVIII', 'Bộ trâm cài đầu bằng vàng ròng và bạc thời chúa Nguyễn, có trâm phượng.', 2),
+      moc('Triều Nguyễn (1802–1945)', 'Điển lệ quy định hoa văn phượng và hoa trên trâm, mũ vàng chỉ dành cho phụ nữ hoàng tộc.', 1),
+    ],
+    nhanBiet: [
+      y('Một trâm phượng trong bộ sưu tập dài khoảng 14,25 cm, nặng 15 g, làm hoàn toàn bằng vàng; đầu trâm là chim phượng ngậm đèn lồng, thân tách thành hai nhánh có đầu cong.', 1),
+      y('Bộ sưu tập còn có 12 trâm hoa; đầu trâm có thể trang trí hoa mai vàng và chuồn chuồn.', 1),
+    ],
+    yNghia: [
+      y('Trong cung đình, hoa văn trên trâm (phượng, hoa) gắn với thân phận: hình phượng dành cho phụ nữ hoàng tộc.', 1),
+    ],
+    diemDocDao: [
+      y('Chế tác rất tinh xảo, thể hiện kỹ thuật kim hoàn cung đình Đàng Trong.', 1, 2),
+    ],
+    nguoiMacDip: [
+      y('Trâm vàng có hoa văn phượng và hoa dành riêng cho phụ nữ hoàng tộc.', 1),
+    ],
+    conTranhLuan: [
+      y('Các nguồn hiện có chỉ nói về trâm cung đình bằng vàng bạc. Chưa có nguồn đáng tin nói về trâm cài của dân thường, hay về việc phối trâm với áo dài, áo tứ thân, áo bà ba. Vì vậy các câu như “trâm cài thường đi cùng áo dài hiện đại” chưa có nguồn.', 1, 2),
+    ],
+    trangThai: 'da-doi-chieu',
+    lienQuan: ['ao-nhat-binh', 'ao-dai'],
+    phoiThu: { trangPhuc: 'Áo dài', phuKien: ['Trâm cài'] },
+  },
+
+  // ================================================================ QUẠT GIẤY
+  {
+    slug: 'quat-giay',
+    ten: 'Quạt giấy',
+    nhom: 'phu-kien',
+    vung: 'Nhiều vùng (làng nghề: Chàng Sơn – Hà Nội, Hới – Quảng Bình, Ân Thi – Hải Dương)',
+    thoiKy: 'Nghề quạt Chàng Sơn có lịch sử hơn 200 năm',
+    tomTat:
+      'Vật dụng tạo gió đã trở thành một phần của đời sống văn hoá; nổi tiếng nhất là quạt giấy làng Chàng Sơn (Hà Nội). Các nguồn chưa nói rõ quạt giấy đi cùng trang phục nào.',
+    luuY:
+      'Phạm vi nguồn: các nguồn hiện có nói về nghề làm quạt và vai trò của quạt trong đời sống, KHÔNG nói quạt giấy đi cùng áo dài, áo tứ thân hay áo bà ba trong dịp nào.',
+    nguon: [N.vietnamPlusQuat, N.congThuongQuatTay, N.congThuongChangSon],
+    coTuThoiNao: [
+      y('Nghề làm quạt giấy ở làng Chàng Sơn (Hà Nội) có lịch sử hơn 200 năm theo VietnamPlus; một nghệ nhân trong làng kể nghề đã có từ hàng trăm năm.', 1, 3),
+      y('Từ thế kỷ XIX, người Pháp đã mang quạt Việt Nam sang tham gia các cuộc triển lãm quạt ở Paris và nhiều nước.', 2),
+    ],
+    hanhTrinh: [
+      moc('Thế kỷ XIX', 'Quạt Việt Nam xuất hiện tại các triển lãm quạt ở Paris.', 2),
+      moc('Thời bao cấp', 'Chàng Sơn trở thành tổ hợp sản xuất quạt lớn nhất nước, cung cấp quạt giấy cho các tỉnh miền Bắc.', 1),
+      moc('Ngày nay', 'Quạt giấy mộc truyền thống có thêm quạt lụa, quạt the, quạt thư pháp và quạt tranh nghệ thuật cỡ lớn.', 1),
+    ],
+    nhanBiet: [
+      y('Quạt tay Việt Nam rất đa dạng; bình dân hơn cả là quạt giấy phất màu tím, đen, hồng với lối trang trí truyền thống là châm kim hình con giống.', 2),
+    ],
+    yNghia: [
+      y('Từ một vật dụng tạo gió, chiếc quạt dần thành một phần của đời sống văn hoá, gắn với hình ảnh, ký ức và nghệ thuật truyền thống.', 1),
+      y('Trong hoàng gia, các nhân vật nữ dùng quạt giấy như một thú tiêu khiển và đồ trang sức không thể thiếu.', 2),
+    ],
+    diemDocDao: [
+      y('Chàng Sơn nổi tiếng với hai nghề thủ công truyền thống là mộc mỹ nghệ và làm quạt giấy.', 1),
+      y('Nghề làm quạt ở Việt Nam gắn với nhiều làng: Chàng Sơn (Hà Nội), Hới (Quảng Bình), Ân Thi (Hải Dương).', 2),
+    ],
+    nguoiMacDip: [
+      y('Quạt được dùng rộng rãi trong cung đình, trên sân khấu và trong đời thường.', 2),
+    ],
+    conTranhLuan: [
+      y('Một bài viết nói nghề làm quạt ở Việt Nam đã tồn tại “hàng ngàn năm”, trong khi nguồn khác chỉ ghi hơn 200 năm cho làng Chàng Sơn. Hai con số nói về hai phạm vi khác nhau (cả nước và một làng) và chưa có nguồn khảo cổ xác nhận mốc “hàng ngàn năm”.', 1, 2),
+      y('Chưa có nguồn nói rõ quạt giấy đi cùng trang phục nào hoặc dịp nào. Câu “quạt giấy hợp áo dài trong dịp lễ hội” trong ứng dụng chưa có nguồn riêng.', 1, 2, 3),
+    ],
+    trangThai: 'da-doi-chieu',
+    lienQuan: ['ao-dai'],
+    phoiThu: { trangPhuc: 'Áo dài', phuKien: ['Quạt giấy'] },
+  },
+
+  // ================================================================= GUỐC MỘC
+  {
+    slug: 'guoc-moc',
+    ten: 'Guốc mộc',
+    nhom: 'phu-kien',
+    vung: 'Nhiều vùng (Hà Nội, Vĩnh Long…)',
+    thoiKy: 'Lâu đời (chưa xác định mốc cụ thể)',
+    tomTat:
+      'Đôi guốc gồm đế gỗ và quai ngang, thông dụng nhiều thế hệ vì sẵn có và bền. Bảo tàng Hà Nội ghi nhận phụ nữ Hà Nội đầu thế kỷ XX đi guốc mộc sơn đen cùng áo ngũ thân.',
+    luuY:
+      'Phạm vi nguồn: chưa có nguồn xác định guốc mộc xuất hiện từ bao giờ, và chưa có nguồn nói guốc mộc “phù hợp với hầu hết trang phục truyền thống”. Chỉ có một ghi nhận trực tiếp: guốc mộc sơn đen đi cùng áo ngũ thân.',
+    nguon: [N.baoTangHaNoi, N.tuoiTreGuoc],
+    coTuThoiNao: [],
+    hanhTrinh: [
+      moc('1914–1920', 'Ảnh tư liệu Hà Nội: phụ nữ trung lưu mặc áo ngũ thân, đi guốc mộc sơn đen.', 1),
+    ],
+    nhanBiet: [
+      y('Gồm đế gỗ và quai ngang phía trên; quai thường làm bằng da, vải bò hoặc nhựa.', 2),
+      y('Ở Hà Nội đầu thế kỷ XX có loại guốc mộc sơn đen.', 1),
+    ],
+    yNghia: [],
+    diemDocDao: [
+      y('Theo một nghệ nhân làm guốc ở Vĩnh Long, guốc mộc phổ biến trước hết vì sẵn có và bền; từng có thời mọi cửa hàng giày trong chợ đều làm và bán guốc mộc, nay nghề làm tay đã hiếm.', 2),
+    ],
+    nguoiMacDip: [
+      y('Phụ nữ trung lưu ở Hà Nội đầu thế kỷ XX mặc áo ngũ thân trong dịp lễ Tết, cưới hỏi, đi guốc mộc sơn đen.', 1),
+      y('Là giày dép thông dụng của người Việt ở nhiều nơi, ví dụ Vĩnh Long (đồng bằng sông Cửu Long).', 2),
+    ],
+    conTranhLuan: [
+      y('Chưa có nguồn xác định mốc xuất hiện của guốc mộc, cũng chưa có nguồn nói guốc mộc đi cùng trang phục nào là “đặc trưng” hay “không phù hợp”.', 1, 2),
+    ],
+    trangThai: 'da-doi-chieu',
+    lienQuan: ['ao-ngu-than', 'ao-dai'],
+    phoiThu: { trangPhuc: 'Áo dài', phuKien: ['Guốc mộc'] },
+  },
+
   // ================================================================ KHĂN ĐÓNG
   {
     slug: 'khan-dong',
     ten: 'Khăn đóng',
     tenKhac: 'khăn xếp, khăn vấn',
     nhom: 'phu-kien',
-    vung: 'Huế và Trung Bộ (nam giới); nhiều vùng',
+    vung: 'Huế, Đàng Trong xưa (khăn của nam giới)',
     thoiKy: 'Phổ biến từ thời các chúa Nguyễn',
     tomTat:
       'Khăn đội đầu của nam giới đi cùng áo dài ngũ thân; có hai kiểu quấn phổ biến là chữ nhân và chữ nhất.',
-    nguon: [N.wikiKhanVan, N.sggpKhanLuong, N.plvnNguThan, N.trinhBach],
+    luuY:
+      'Khăn đóng truyền thống là khăn của NAM GIỚI đi cùng áo dài ngũ thân. Ảnh minh hoạ trong phần phối đồ hiện dùng người mẫu nữ, nên bộ này chỉ mang tính tham khảo. Wikipedia ghi áo dài có thể phối cùng khăn vấn nói chung, nhưng các nguồn báo chí nói về khăn đóng đều gắn với nam giới.',
+    nguon: [N.wikiKhanVan, N.sggpKhanLuong, N.plvnNguThan, N.trinhBach, N.wikiAoDai],
     coTuThoiNao: [
       y('Khăn vấn (còn gọi khăn đóng, khăn xếp) là kiểu khăn quấn đầu của người Việt, trở nên phổ biến từ thời các chúa Nguyễn.', 1),
       y('Ghi chép của Borri (thế kỷ XVII) cho biết đàn ông Nam Hà để tóc dài và quấn khăn như phụ nữ.', 4),
@@ -774,6 +945,7 @@ export const CAC_MUC: MucVanHoa[] = [
     ],
     nguoiMacDip: [
       y('Nam giới đi cùng áo dài ngũ thân; ngày nay thường thấy trong nghi lễ, ngoại giao và các hoạt động văn hoá.', 3),
+      y('Wikipedia ghi nhận áo dài có thể được phối cùng nón lá hoặc khăn vấn.', 5),
     ],
     conTranhLuan: [
       y('Các nguồn dùng các tên khăn đóng, khăn xếp, khăn vấn, khăn lương gần nhau và chưa phân biệt thống nhất cách làm, cách đội.', 1, 2),
@@ -791,37 +963,37 @@ export const CAC_MUC: MucVanHoa[] = [
     vung: 'Nam Bộ',
     thoiKy: 'Chưa xác định',
     tomTat:
-      'Chiếc khăn kẻ ô quen thuộc của người Nam Bộ, đi cùng áo bà ba và nón lá. Hiện chưa đủ nguồn để viết sâu hơn.',
-    canhBaoDo:
-      'CHƯA KIỂM CHỨNG ĐỦ NGUỒN. Hiện chỉ có một bài phỏng vấn trên báo và một trang du lịch phổ thông; chưa có nghiên cứu học thuật hay tư liệu bảo tàng về khăn rằn của Việt Nam. Các ý dưới đây chỉ là thông tin sơ bộ, chưa nên trích dẫn.',
-    nguon: [N.baoLaoCaiKhanRan, N.miaKhanRan],
+      'Chiếc khăn kẻ ô quen thuộc của người Nam Bộ, đi cùng áo bà ba và nón lá. Nguồn gốc và niên đại chưa xác định; các nguồn đáng tin hiện chủ yếu nói về hình ảnh gắn với áo bà ba.',
+    luuY:
+      'Phạm vi nguồn: có hai bài báo chính thống về hình ảnh khăn rằn đi cùng áo bà ba và nón lá. Chưa có nghiên cứu học thuật hay tư liệu bảo tàng về nguồn gốc, niên đại và cách vấn; các ý về công dụng và giả thuyết nguồn gốc chỉ từ một trang phổ thông.',
+    nguon: [N.baoLaoCaiKhanRan, N.sggpThuongBaBa, N.miaKhanRan],
     coTuThoiNao: [
-      y('Trang phổ thông cho biết chưa có nhà nghiên cứu nào xác định được chính xác khăn rằn có từ bao giờ; có giả thuyết cho rằng nó có nguồn gốc từ khăn krama của người Khmer.', 2),
+      y('Trang phổ thông cho biết chưa có nhà nghiên cứu nào xác định chính xác khăn rằn có từ bao giờ; có giả thuyết cho rằng nó có nguồn gốc từ khăn krama của người Khmer.', 3),
     ],
     hanhTrinh: [],
-    nhanBiet: [],
+    nhanBiet: [
+      y('Khăn kẻ ô (rằn) thường quàng cổ; hình ảnh quen thuộc là khăn rằn đi cùng áo bà ba và nón lá.', 1, 2),
+    ],
     yNghia: [
       y('Soạn giả Nhâm Hùng (tác giả cuốn “Văn hoá khăn rằn”) nói khăn rằn cùng áo bà ba và nón lá gắn bó với người phương Nam hàng trăm năm, biểu trưng cho sự nồng hậu, nghĩa tình, chất phác.', 1),
-      y('Trang phổ thông ghi khăn dùng che nắng, che sương, thấm mồ hôi khi lao động và đã đi cùng các cuộc kháng chiến.', 2),
+      y('Trang phổ thông ghi khăn dùng che nắng, che sương, thấm mồ hôi khi lao động và đã đi cùng các cuộc kháng chiến.', 3),
     ],
     diemDocDao: [],
-    nguoiMacDip: [],
-    conTranhLuan: [
-      y('Giả thuyết liên hệ với krama của người Khmer mới là giả thuyết, chưa có nguồn nghiên cứu để kiểm chứng. Krama là biểu tượng riêng của văn hoá Campuchia (đã được UNESCO ghi danh năm 2024), nên không nên suy ra quan hệ khi chưa có tài liệu.', 2),
+    nguoiMacDip: [
+      y('Báo Sài Gòn Giải Phóng ghi nhận các chị em lái xuồng, buôn bán, chở khách du lịch ở miệt vườn vẫn mặc áo bà ba, quàng khăn rằn, đội nón lá.', 2),
     ],
-    trangThai: 'chua-kiem-chung',
+    conTranhLuan: [
+      y('Giả thuyết liên hệ với krama của người Khmer mới chỉ là giả thuyết, chưa có nguồn nghiên cứu kiểm chứng. Krama là biểu tượng riêng của văn hoá Campuchia (đã được UNESCO ghi danh năm 2024), nên không nên suy ra quan hệ khi chưa có tài liệu.', 3),
+    ],
+    trangThai: 'con-tranh-luan',
     lienQuan: ['ao-ba-ba', 'non-la'],
-    phoiThu: {
-      trangPhuc: 'Áo bà ba',
-      phuKien: ['Khăn rằn'],
-      ghiChu: 'Phụ kiện này chưa được kiểm chứng nguồn. Hãy xem kết quả phối với sự thận trọng.',
-    },
+    phoiThu: { trangPhuc: 'Áo bà ba', phuKien: ['Khăn rằn'] },
   },
   {
     slug: 'khan-mo-qua',
     ten: 'Khăn mỏ quạ',
     nhom: 'phu-kien',
-    vung: 'Bắc Bộ (theo nguồn phổ thông)',
+    vung: 'Bắc Bộ (chưa kiểm chứng)',
     thoiKy: 'Chưa xác định',
     tomTat:
       'Khăn đội đầu được nhắc đến cùng áo tứ thân, yếm và nón quai thao. Chưa có nguồn đủ tin cậy để mô tả riêng.',
@@ -1031,6 +1203,9 @@ export const SLUG_THEO_TEN: Record<string, string> = {
   'Khăn rằn': 'khan-ran',
   'Khăn mỏ quạ': 'khan-mo-qua',
   'Khăn đóng': 'khan-dong',
+  'Trâm cài': 'tram-cai',
+  'Quạt giấy': 'quat-giay',
+  'Guốc mộc': 'guoc-moc',
 };
 
 export function laySlugTheoTen(ten: string): string | null {

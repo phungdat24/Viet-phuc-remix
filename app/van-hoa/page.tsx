@@ -111,7 +111,7 @@ export default function TrangVanHoa() {
           <li>
             <strong className="text-ink">4. Chưa có nguồn thì không viết thêm.</strong> Mục nào chưa có nguồn kiểm chứng sẽ
             bị gắn cảnh báo đỏ và chỉ giữ thông tin sơ bộ; phần nào chưa có nguồn đáng tin thì để trống chứ không suy đoán.
-            Hiện có {soChuaKiemChung} mục như vậy. Đố vui cũng không hỏi về các mục này.
+            Hiện có {soChuaKiemChung} mục như vậy. Mục nào nguồn chỉ phủ một phần thì có khung “Lưu ý về phạm vi nguồn” màu vàng, nói rõ nguồn nói được gì và chưa nói được gì. Đố vui không hỏi về các mục chưa kiểm chứng.
           </li>
           <li>
             <strong className="text-ink">5. Ảnh AI chỉ là minh hoạ.</strong> Mọi ảnh do AI vẽ trong phần phối đồ đều gắn
