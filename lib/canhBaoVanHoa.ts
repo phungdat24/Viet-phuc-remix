@@ -1,6 +1,16 @@
 import type { MucDoVanHoa, PhuKien, QuyTacVanHoa } from '@/types/phoi-do';
 import { layNhomCuaPhuKien } from '@/lib/phuKienTheoTrangPhuc';
 
+/** Nhãn hiển thị cho mức "tuy_dip" (khoá trong dữ liệu giữ nguyên để không phải đổi database). */
+export const NHAN_HOP_CO_DIEU_KIEN = 'Hợp có điều kiện';
+
+/** Câu mặc định khi món "hợp có điều kiện" chưa có ghi chú riêng. */
+export const LY_DO_HOP_CO_DIEU_KIEN =
+  'Món này phối được trong một số hoàn cảnh, nhưng không phải cách phối quen thuộc với trang phục này.';
+
+/** Câu nhắc chọn dịp, dùng thống nhất ở khung Phụ kiện, kết quả thẩm định và máy chủ. */
+export const CAU_NHAC_CHON_DIP = 'Chọn dịp sử dụng ở khung bên trái để nhận xét sát hơn.';
+
 /**
  * Tính mức độ văn hoá của MỘT phụ kiện từ danh sách quy tắc đã tải (chỉ để hiện nhanh ở giao diện).
  * Cùng thứ tự ưu tiên với server: quy tắc riêng theo dịp -> quy tắc chung -> chưa có dữ liệu.

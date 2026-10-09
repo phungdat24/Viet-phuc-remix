@@ -1,4 +1,5 @@
 import prisma from "@/lib/prisma";
+import { CAU_NHAC_CHON_DIP, LY_DO_HOP_CO_DIEU_KIEN } from "@/lib/canhBaoVanHoa";
 
 /**
  * LỚP 1 — Quy tắc văn hóa (tra cứu DB, không gọi AI).
@@ -163,7 +164,7 @@ export async function kiemTraQuyTacVanHoa(input: {
     let lyDo = quyTac?.ghiChu ?? null;
     if (!lyDo) {
       if (mucDo === "tuy_dip" && !suKienId) {
-        lyDo = "Sự phù hợp còn tuỳ dịp. Hãy chọn thêm dịp để có kết quả chính xác.";
+        lyDo = `${LY_DO_HOP_CO_DIEU_KIEN} ${CAU_NHAC_CHON_DIP}`;
       } else if (mucDo === "chua_co_du_lieu") {
         lyDo = "Chưa có dữ liệu quy tắc cho cặp này, cần chuyên gia văn hoá bổ sung.";
       }

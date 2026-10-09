@@ -3,6 +3,7 @@
 import type { MucDoVanHoa } from '@/types/phoi-do';
 import { layMucTheoSlug, laySlugTheoTen } from '@/lib/vanHoa/duLieu';
 import NhanTrangThai from '@/components/van-hoa/NhanTrangThai';
+import { NHAN_HOP_CO_DIEU_KIEN } from '@/lib/canhBaoVanHoa';
 
 /** Mỗi mức có biểu tượng + nhãn chữ + màu, nên không chỉ dựa vào màu. */
 export const GIAO_DIEN_MUC_DO: Record<
@@ -17,7 +18,7 @@ export const GIAO_DIEN_MUC_DO: Record<
     tron: 'bg-jade text-white',
   },
   tuy_dip: {
-    nhan: 'Tuỳ dịp',
+    nhan: NHAN_HOP_CO_DIEU_KIEN,
     bieuTuong: '◐',
     khung: 'border-gold/50 bg-gold/10',
     chu: 'text-ink',

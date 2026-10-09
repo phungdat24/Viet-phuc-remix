@@ -26,6 +26,8 @@ export interface PhuKien {
 export interface KetQuaHaiHoaMau {
   mucDo: 'tuong_dong' | 'bo_tuc' | 'trung_tinh' | 'lech_tong';
   goiY: string;
+  /** Lý do ngắn vì sao ra mức này (không có ở bộ phối đã lưu từ trước). */
+  lyDo?: string;
   khoangCachHue: number;
 }
 

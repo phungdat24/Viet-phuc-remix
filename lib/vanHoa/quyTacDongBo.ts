@@ -14,7 +14,7 @@
  *   - phu_hop        : có nguồn nối TRỰC TIẾP hoặc GIÁN TIẾP (tiền thân/cùng ngữ cảnh) giữa hai món.
  *   - khong_phu_hop  : CHỈ khi cả hai món đều có nguồn không phải "chưa kiểm chứng" và nguồn gắn chúng
  *                      với hai vùng miền / đối tượng khác nhau. Đây là cảnh báo đỏ nên đòi hỏi cao nhất.
- *   - tuy_dip        : món gắn với bối cảnh khác nhưng chưa có nguồn nào nói là “không nên”.
+ *   - tuy_dip        : (nhãn hiển thị: "Hợp có điều kiện") món gắn với bối cảnh khác nhưng chưa có nguồn nào nói là “không nên”.
  *   - chua_co_du_lieu: chưa có nguồn đáng tin. Giao diện nói thẳng “chưa có dữ liệu”, KHÔNG đoán.
  */
 
@@ -63,7 +63,7 @@ export const QUY_TAC: QuyTacDongBo[] = [
   q('Áo dài', 'Nón lá', 'phu_hop', 'phu_hop', 'truc-tiep', ['ao-dai', 'non-la'],
     'Nón lá là phụ kiện phổ biến, thường được phối cùng áo dài.'),
   q('Áo dài', 'Khăn đóng', 'phu_hop', 'tuy_dip', 'truc-tiep', ['khan-dong', 'ao-dai', 'ao-ngu-than'],
-    'Khăn đóng (khăn vấn) có thể đi cùng áo dài, nhưng truyền thống là khăn của nam giới đi cùng áo dài ngũ thân. Người mẫu trong ứng dụng là nữ nên bạn hãy cân nhắc dịp và đối tượng.'),
+    'Khăn đóng (khăn vấn) vốn là khăn của nam giới, truyền thống đi cùng áo dài ngũ thân ở Huế. Với áo dài nữ, đây không phải cách phối quen thuộc; bạn vẫn có thể dùng nếu muốn tạo nét Huế xưa.'),
   q('Áo dài', 'Trâm cài', 'phu_hop', 'chua_co_du_lieu', 'khong', ['tram-cai'],
     'Chưa có nguồn đáng tin về việc phối trâm cài với áo dài. Nguồn hiện có chỉ nói về trâm cung đình triều Nguyễn.'),
   q('Áo dài', 'Quạt giấy', 'phu_hop', 'chua_co_du_lieu', 'khong', ['quat-giay'],
@@ -71,13 +71,13 @@ export const QUY_TAC: QuyTacDongBo[] = [
   q('Áo dài', 'Guốc mộc', 'phu_hop', 'phu_hop', 'gian-tiep', ['guoc-moc', 'ao-ngu-than'],
     'Bảo tàng Hà Nội ghi nhận phụ nữ Hà Nội đầu thế kỷ XX mặc áo ngũ thân (tiền thân của áo dài) đi guốc mộc sơn đen.'),
   q('Áo dài', 'Nón quai thao', 'khong_phu_hop', 'tuy_dip', 'gian-tiep', ['non-quai-thao', 'ao-dai'],
-    'Nón quai thao gắn với phụ nữ đồng bằng Bắc Bộ, nhất là dịp lễ hội, cưới hỏi. Áo dài là trang phục toàn quốc nên cặp này còn tuỳ dịp.'),
+    'Nón quai thao gắn với phụ nữ đồng bằng Bắc Bộ, nhất là dịp lễ hội, cưới hỏi. Áo dài là trang phục toàn quốc nên vẫn phối được, hợp nhất khi bạn muốn tạo không khí lễ hội hoặc cưới hỏi Bắc Bộ.'),
   q('Áo dài', 'Khăn mỏ quạ', 'khong_phu_hop', 'chua_co_du_lieu', 'khong', ['khan-mo-qua'],
     'Khăn mỏ quạ chưa được kiểm chứng nguồn nên chưa thể kết luận mức độ phù hợp với áo dài.'),
   q('Áo dài', 'Khăn rằn', 'khong_phu_hop', 'tuy_dip', 'gian-tiep', ['khan-ran', 'ao-dai'],
-    'Khăn rằn gắn với Nam Bộ và áo bà ba (theo báo chí). Áo dài là trang phục toàn quốc nên cặp này còn tuỳ dịp.'),
+    'Khăn rằn gắn với Nam Bộ và áo bà ba (theo báo chí). Áo dài là trang phục toàn quốc nên vẫn phối được, chỉ là bộ đồ sẽ mang sắc thái Nam Bộ.'),
   q('Áo dài', 'Yếm đào', 'khong_phu_hop', 'tuy_dip', 'gian-tiep', ['yem', 'ao-ngu-than'],
-    'Yếm là đồ mặc trong, gắn với áo tứ thân. Theo truyền thuyết về cải cách trang phục Đàng Trong, áo ngũ thân cài khuy kín thay cho kiểu “phơi yếm”. Yếm mặc ngoài như “áo yếm” là cách làm mới hiện đại.'),
+    'Yếm là đồ mặc trong, gắn với áo tứ thân. Theo truyền thuyết về cải cách trang phục Đàng Trong, áo ngũ thân cài khuy kín ra đời thay cho kiểu “phơi yếm”. Yếm mặc ngoài như “áo yếm” là cách làm mới hiện đại, không phải cách phối truyền thống với áo dài.'),
 
   // =========================== ÁO TỨ THÂN ==========================
   q('Áo tứ thân', 'Nón quai thao', 'phu_hop', 'phu_hop', 'truc-tiep', ['non-quai-thao', 'ao-tu-than'],

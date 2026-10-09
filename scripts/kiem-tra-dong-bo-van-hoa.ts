@@ -82,7 +82,7 @@ for (const n of NOI_DUNG_VAN_HOA) {
 const demDo = QUY_TAC.filter((r) => r.mucDo === 'khong_phu_hop').length;
 const demCu = QUY_TAC.filter((r) => r.mucCu === 'khong_phu_hop').length;
 const dem = (m: string) => QUY_TAC.filter((r) => r.mucDo === m).length;
-console.log(`Quy tắc: ${QUY_TAC.length} cặp | phù hợp ${dem('phu_hop')} | tuỳ dịp ${dem('tuy_dip')} | không phù hợp ${demDo} (trước: ${demCu}) | chưa có dữ liệu ${dem('chua_co_du_lieu')}`);
+console.log(`Quy tắc: ${QUY_TAC.length} cặp | phù hợp ${dem('phu_hop')} | hợp có điều kiện ${dem('tuy_dip')} | không phù hợp ${demDo} (trước: ${demCu}) | chưa có dữ liệu ${dem('chua_co_du_lieu')}`);
 console.log(`Thư viện: ${CAC_MUC.length} mục | đỏ: ${CAC_MUC.filter((m) => m.trangThai === 'chua-kiem-chung').map((m) => m.slug).join(', ') || '(không)'}`);
 if (loi.length === 0) console.log('\nHỢP LỆ: không có mâu thuẫn giữa quy tắc, vùng miền và thư viện văn hoá.');
 else {
@@ -94,7 +94,7 @@ else {
 if (process.argv.includes('--md')) {
   const TEN_MUC: Record<string, string> = {
     phu_hop: 'Phù hợp',
-    tuy_dip: 'Tuỳ dịp',
+    tuy_dip: 'Hợp có điều kiện',
     khong_phu_hop: '**Không phù hợp (cảnh báo)**',
     chua_co_du_lieu: 'Chưa có dữ liệu',
   };

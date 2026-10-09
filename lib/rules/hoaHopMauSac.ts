@@ -38,10 +38,35 @@ const CAU_DU_PHONG: Record<MucDoMau, string> = {
   lech_tong: "Hai màu hơi lệch tông, nên thêm chi tiết trung tính để cân bằng.",
 };
 
+export interface MauCoTen extends MauDauVao {
+  ten: string;
+}
+
+/** Lý do ngắn, dễ hiểu cho từng mức hoà hợp (chỉ dựa trên dữ liệu đã dùng để tính). */
+export function taoLyDoHoaHop(a: MauCoTen, b: MauCoTen, mucDo: MucDoMau, khoangCachHue: number): string {
+  const d = Math.round(khoangCachHue);
+  switch (mucDo) {
+    case "trung_tinh": {
+      if (a.laTrungTinh && b.laTrungTinh) return `${a.ten} và ${b.ten} đều là màu trung tính nên dễ đi cùng nhau.`;
+      const trungTinh = a.laTrungTinh ? a : b;
+      return `${trungTinh.ten} là màu trung tính nên dễ đi cùng hầu hết các màu khác.`;
+    }
+    case "tuong_dong":
+      if (d === 0 && a.ten === b.ten) return `Hai món cùng một màu ${a.ten} nên rất đồng điệu.`;
+      return `${a.ten} và ${b.ten} nằm sát nhau trên vòng màu (cách ${d}°) nên cùng một tông.`;
+    case "bo_tuc":
+      return `${a.ten} và ${b.ten} nằm gần như đối diện nhau trên vòng màu (cách ${d}°) nên tương phản rõ.`;
+    case "lech_tong":
+      return `${a.ten} và ${b.ten} cách nhau ${d}° trên vòng màu: chưa đủ gần để cùng tông, cũng chưa đủ xa để thành cặp tương phản.`;
+  }
+}
+
 export interface KetQuaHoaHopMau {
   mucDo: MucDoMau;
   /** Câu nhận xét lấy từ DanhGiaMauSac (đã sinh sẵn, không gọi AI lúc chạy). */
   goiY: string;
+  /** Lý do ngắn vì sao ra mức này, tính từ tên màu + góc Hue + cờ trung tính. */
+  lyDo: string;
   khoangCachHue: number;
   mauChinh: { id: string; ten: string; maHex: string; gocHue: number };
   mauPhu: { id: string; ten: string; maHex: string; gocHue: number };
@@ -67,6 +92,7 @@ export async function kiemTraHoaHopMau(input: {
   return {
     mucDo,
     goiY: danhGia?.noiDungAiSinh ?? CAU_DU_PHONG[mucDo],
+    lyDo: taoLyDoHoaHop(mauChinh, mauPhu, mucDo, khoangCachHue),
     khoangCachHue,
     mauChinh: rut(mauChinh),
     mauPhu: rut(mauPhu),
