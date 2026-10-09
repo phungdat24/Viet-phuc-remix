@@ -4,7 +4,8 @@ import { useState } from 'react';
 import Link from 'next/link';
 import XemTruoc from '@/components/phoi-do/XemTruoc';
 import GhiChuAnhAI from '@/components/phoi-do/GhiChuAnhAI';
-import { taoNoiDungChiaSe, saoChepChiaSe } from '@/lib/chiaSe';
+import { taoNoiDungChiaSe, taoLinkChiaSe, taoThamSoPhoiDo, saoChepChiaSe } from '@/lib/chiaSe';
+import { taiAnhVe, taoTenFileAnh } from '@/lib/taiAnh';
 import type { LookbookItem } from '@/lib/localLookbook';
 import { layPhuKienIds } from '@/lib/localLookbook';
 import type { TrangPhuc, SuKien, MauSac, PhuKien } from '@/types/phoi-do';
@@ -32,21 +33,54 @@ export default function TheLookbook({
   onXoa,
 }: Props) {
   const [daSaoChep, setDaSaoChep] = useState(false);
+  const [daChepLink, setDaChepLink] = useState(false);
+  const [dangTaiAnh, setDangTaiAnh] = useState(false);
+  const [thongBaoTai, setThongBaoTai] = useState<string | null>(null);
 
   const canhBao = item.ketQuaKiemTra?.phuHopVanHoa?.canhBao ?? false;
+  // Lưu ý: trường `suKienNgauNhien` giữ tên cũ; nay nghĩa là "dịp do hệ thống chọn mặc định".
   const meta = [
-    suKien ? (item.suKienNgauNhien ? `${suKien.ten} (dịp ngẫu nhiên)` : suKien.ten) : null,
+    suKien ? (item.suKienNgauNhien ? `${suKien.ten} (dịp mặc định)` : suKien.ten) : null,
     cacPhuKien.length > 0 ? cacPhuKien.map((p) => p.ten).join(', ') : 'Không phụ kiện',
   ]
     .filter(Boolean)
     .join(' · ');
 
+  // Tham số mở lại bộ phối: chỉ mang dịp do người dùng chọn (dịp mặc định thì để trống,
+  // khi mở lại hệ thống tự dùng dịp mặc định).
+  const phuKienIds = layPhuKienIds(item);
+  const thamSoPhoiDo = {
+    trangPhucId: item.trangPhucId || null,
+    suKienId: item.suKienId && !item.suKienNgauNhien ? item.suKienId : null,
+    mauChinhId: item.mauChinhId || null,
+    mauPhuId: item.mauPhuId || null,
+    phuKienIds,
+  };
+
   async function xuLyChiaSe() {
-    const noiDung = taoNoiDungChiaSe({ trangPhuc, suKien, mauChinh, mauPhu, cacPhuKien });
+    const link = taoLinkChiaSe(thamSoPhoiDo);
+    const noiDung = taoNoiDungChiaSe({ trangPhuc, suKien, mauChinh, mauPhu, cacPhuKien, link });
     if (!noiDung) return;
     const thanhCong = await saoChepChiaSe(noiDung);
     setDaSaoChep(thanhCong);
     setTimeout(() => setDaSaoChep(false), 2000);
+  }
+
+  async function xuLySaoChepLink() {
+    const link = taoLinkChiaSe(thamSoPhoiDo);
+    if (!link) return;
+    const thanhCong = await saoChepChiaSe(link);
+    setDaChepLink(thanhCong);
+    setTimeout(() => setDaChepLink(false), 2000);
+  }
+
+  async function xuLyTaiAnh() {
+    if (!item.imageUrl) return;
+    setDangTaiAnh(true);
+    setThongBaoTai(null);
+    const taiDuoc = await taiAnhVe(item.imageUrl, taoTenFileAnh(trangPhuc?.ten));
+    if (!taiDuoc) setThongBaoTai('Ảnh đã mở ở tab mới, hãy nhấn giữ hoặc chuột phải để lưu.');
+    setDangTaiAnh(false);
   }
 
   function xuLyXoa() {
@@ -55,14 +89,7 @@ export default function TheLookbook({
     }
   }
 
-  const thamSo = new URLSearchParams();
-  if (item.trangPhucId) thamSo.set('trangPhucId', item.trangPhucId);
-  // Dịp ngẫu nhiên không phải lựa chọn của người dùng → khi phối lại để trống, hệ thống bốc lại.
-  if (item.suKienId && !item.suKienNgauNhien) thamSo.set('suKienId', item.suKienId);
-  if (item.mauChinhId) thamSo.set('mauChinhId', item.mauChinhId);
-  if (item.mauPhuId) thamSo.set('mauPhuId', item.mauPhuId);
-  const phuKienIds = layPhuKienIds(item);
-  if (phuKienIds.length > 0) thamSo.set('phuKienIds', phuKienIds.join(','));
+  const nutPhu = 'flex-1 py-2.5 text-ink-soft hover:text-ink transition';
 
   return (
     <article className="bg-paper-raised rounded-md overflow-hidden flex flex-col">
@@ -127,21 +154,32 @@ export default function TheLookbook({
             {canhBao ? '⚠ Có điểm cần lưu ý về văn hoá' : '✓ Đã kiểm tra chuẩn văn hoá'}
           </p>
         )}
+
+        {thongBaoTai && (
+          <p className="text-xs text-ink-soft" role="status">
+            {thongBaoTai}
+          </p>
+        )}
       </div>
 
-      <div className="grid grid-cols-3 border-t border-ink-soft/15 text-sm">
-        <button onClick={xuLyXoa} className="py-2.5 text-ink-soft hover:text-lacquer transition">
+      <div className="flex flex-wrap border-t border-ink-soft/15 text-sm divide-x divide-ink-soft/15">
+        <button onClick={xuLyXoa} className="flex-1 py-2.5 text-ink-soft hover:text-lacquer transition">
           Xoá
         </button>
-        <button
-          onClick={xuLyChiaSe}
-          className="py-2.5 text-ink-soft hover:text-ink transition border-x border-ink-soft/15"
-        >
+        <button onClick={xuLyChiaSe} className={nutPhu}>
           {daSaoChep ? 'Đã chép ✓' : 'Chia sẻ'}
         </button>
+        <button onClick={xuLySaoChepLink} className={nutPhu}>
+          {daChepLink ? 'Đã chép ✓' : 'Chép link'}
+        </button>
+        {item.imageUrl && (
+          <button onClick={xuLyTaiAnh} disabled={dangTaiAnh} className={`${nutPhu} disabled:opacity-60`}>
+            {dangTaiAnh ? 'Đang tải...' : 'Tải ảnh'}
+          </button>
+        )}
         <Link
-          href={`/phoi-do?${thamSo.toString()}`}
-          className="py-2.5 text-center text-lacquer font-medium hover:opacity-80 transition"
+          href={`/phoi-do?${taoThamSoPhoiDo(thamSoPhoiDo).toString()}`}
+          className="flex-1 py-2.5 text-center text-lacquer font-medium hover:opacity-80 transition"
         >
           Phối lại
         </Link>

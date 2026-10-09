@@ -9,7 +9,8 @@ import XemTruoc from './XemTruoc';
 import HuyHieuVanHoa, { type MucLuuYVanHoa } from './HuyHieuVanHoa';
 import KetQuaPhoiDo from './KetQuaPhoiDo';
 import { saveLookbook } from '@/lib/localLookbook';
-import { taoNoiDungChiaSe, saoChepChiaSe } from '@/lib/chiaSe';
+import { taoNoiDungChiaSe, taoLinkChiaSe, saoChepChiaSe } from '@/lib/chiaSe';
+import { taoTenFileAnh } from '@/lib/taiAnh';
 import { layBoMau, chuanHoaTen } from '@/lib/mauTheoTrangPhuc';
 import { layPhuKienChoPhep, layNhomCuaPhuKien, timMonXungDot } from '@/lib/phuKienTheoTrangPhuc';
 import { useDanhMuc } from '@/hooks/useDanhMuc';
@@ -361,17 +362,25 @@ export default function ThuNghiemPhoiDoClient() {
     setDaLuu(true);
   }
 
-  async function xuLyChiaSe() {
+    async function xuLyChiaSe() {
+    // Link chỉ mang dịp do NGƯỜI DÙNG chọn (suKienId); chưa chọn thì người nhận cũng dùng dịp mặc định.
+    const link = taoLinkChiaSe({ trangPhucId, suKienId, mauChinhId, mauPhuId, phuKienIds });
     const noiDung = taoNoiDungChiaSe({
       trangPhuc: trangPhucDangChon,
       suKien: suKienHieuLuc,
       mauChinh: mauChinhDangChon,
       mauPhu: mauPhuDangChon,
       cacPhuKien: cacPhuKienDangChon,
+      link,
     });
     if (!noiDung) return;
     const thanhCong = await saoChepChiaSe(noiDung);
     setDaSaoChep(thanhCong);
+  }
+    async function xuLySaoChepLink(): Promise<boolean> {
+    const link = taoLinkChiaSe({ trangPhucId, suKienId, mauChinhId, mauPhuId, phuKienIds });
+    if (!link) return false;
+    return saoChepChiaSe(link);
   }
 
   return (
@@ -482,10 +491,12 @@ export default function ThuNghiemPhoiDoClient() {
                 daSaoChep={daSaoChep}
                 onLuu={xuLyLuu}
                 onChiaSe={xuLyChiaSe}
+                onSaoChepLink={xuLySaoChepLink}
                 anhAI={{
                   thieuThongTin: !suKienHieuLuc,
                   tenSuKien: suKienHieuLuc?.ten ?? null,
                   suKienMacDinh: dungDipMacDinh,
+                  tenFileAnh: taoTenFileAnh(trangPhucDangChon?.ten),
                   tenPhuKien:
                     cacPhuKienDangChon.length > 0
                       ? cacPhuKienDangChon.map((p) => p.ten).join(', ')

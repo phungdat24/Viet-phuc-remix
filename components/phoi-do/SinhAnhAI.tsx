@@ -1,8 +1,10 @@
 'use client';
 
+import { useState } from 'react';
 import Link from 'next/link';
 import type { ToHopAI } from '@/types/phoi-do';
 import GhiChuAnhAI from './GhiChuAnhAI';
+import { taiAnhVe } from '@/lib/taiAnh';
 
 export interface AnhAIProps {
   /** true khi không có dịp nào để dùng (danh mục dịp rỗng) → không thể sinh ảnh AI */
@@ -13,6 +15,8 @@ export interface AnhAIProps {
   suKienMacDinh: boolean;
   /** null = không chọn phụ kiện. */
   tenPhuKien: string | null;
+  /** Tên file (không đuôi) khi tải ảnh về. */
+  tenFileAnh?: string;
   /** Cảnh báo sai phạm văn hoá (hiện khung đỏ dưới ảnh). null = không có cảnh báo. */
   canhBaoVanHoa?: string | null;
   /** true = ẩn nhận xét do AI viết (khi Lớp 1 đang cảnh báo hoặc có món chưa kiểm chứng). */
@@ -32,6 +36,7 @@ export default function SinhAnhAI({
   tenSuKien,
   suKienMacDinh,
   tenPhuKien,
+  tenFileAnh = 'viet-phuc-remix',
   canhBaoVanHoa = null,
   anNhanXet = false,
   dangSinh,
@@ -43,6 +48,22 @@ export default function SinhAnhAI({
   onKhongDuyet,
   onSinhLai,
 }: AnhAIProps) {
+  // Hook phải đặt trước mọi lệnh return sớm bên dưới.
+  const [dangTaiAnh, setDangTaiAnh] = useState(false);
+  const [thongBaoTai, setThongBaoTai] = useState<string | null>(null);
+
+  async function xuLyTaiAnh(url: string) {
+    setDangTaiAnh(true);
+    setThongBaoTai(null);
+    const taiDuoc = await taiAnhVe(url, tenFileAnh);
+    setThongBaoTai(
+      taiDuoc
+        ? 'Đã tải ảnh về máy ✓'
+        : 'Không tải trực tiếp được, ảnh đã mở ở tab mới. Hãy nhấn giữ (điện thoại) hoặc chuột phải (máy tính) để lưu.',
+    );
+    setDangTaiAnh(false);
+  }
+
   if (thieuThongTin) {
     return (
       <p className="text-xs text-ink-soft bg-paper rounded-md p-3 mt-3">
@@ -92,6 +113,23 @@ export default function SinhAnhAI({
       )}
 
       {toHop.imageUrl && <GhiChuAnhAI />}
+
+      {toHop.imageUrl && (
+        <div>
+          <button
+            onClick={() => xuLyTaiAnh(toHop.imageUrl as string)}
+            disabled={dangTaiAnh}
+            className="w-full border border-ink-soft/30 font-medium py-2 rounded-md hover:border-gold transition disabled:opacity-60"
+          >
+            {dangTaiAnh ? 'Đang tải ảnh...' : '⬇ Tải ảnh về máy'}
+          </button>
+          {thongBaoTai && (
+            <p className="mt-1 text-xs text-ink-soft" role="status">
+              {thongBaoTai}
+            </p>
+          )}
+        </div>
+      )}
 
       {suKienMacDinh && tenSuKien && (
         <p className="text-xs text-ink-soft bg-paper rounded-md p-3">

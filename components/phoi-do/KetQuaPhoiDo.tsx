@@ -1,5 +1,6 @@
 'use client';
 
+import { useState } from 'react';
 import Link from 'next/link';
 import type { KetQuaKiemTra, MucDoVanHoa, PhuKien } from '@/types/phoi-do';
 import SinhAnhAI, { type AnhAIProps } from './SinhAnhAI';
@@ -86,6 +87,8 @@ interface Props {
   daSaoChep: boolean;
   onLuu: () => void;
   onChiaSe: () => void;
+  /** Chỉ sao chép link mở lại bộ phối; trả về true nếu chép được. */
+  onSaoChepLink: () => Promise<boolean>;
   anhAI: AnhAIProps;
   /** true = người dùng chưa chọn dịp (kết quả văn hoá kém tin cậy hơn). */
   chuaChonDip: boolean;
@@ -99,10 +102,19 @@ export default function KetQuaPhoiDo({
   daSaoChep,
   onLuu,
   onChiaSe,
+  onSaoChepLink,
   anhAI,
   chuaChonDip,
   cacPhuKien,
 }: Props) {
+  const [daChepLink, setDaChepLink] = useState(false);
+
+  async function xuLySaoChepLink() {
+    const thanhCong = await onSaoChepLink();
+    setDaChepLink(thanhCong);
+    if (thanhCong) setTimeout(() => setDaChepLink(false), 2000);
+  }
+
   const { haiHoaMau, phuHopVanHoa } = ketQua;
   const cacMuc = taoCacMuc(phuHopVanHoa, cacPhuKien);
   const gdChung = GIAO_DIEN_MUC_DO[phuHopVanHoa.mucDo];
@@ -189,23 +201,29 @@ export default function KetQuaPhoiDo({
         </p>
       )}
 
-      <div className="flex gap-2 mt-3">
+      <div className="flex flex-wrap gap-2 mt-3">
         {/* Khi có ảnh AI thì việc lưu Lookbook đi qua bước duyệt ở trên;
             nút này chỉ còn dùng khi không sinh được ảnh (thiếu dịp hoặc AI bị lỗi). */}
         {(anhAI.thieuThongTin || (anhAI.loi && !anhAI.toHop && !anhAI.dangSinh)) && (
           <button
             onClick={onLuu}
             disabled={daLuu}
-            className="flex-1 bg-lacquer text-white font-medium py-2.5 rounded-md hover:opacity-90 transition disabled:opacity-60"
+            className="min-w-32 flex-1 bg-lacquer text-white font-medium py-2.5 rounded-md hover:opacity-90 transition disabled:opacity-60"
           >
             {daLuu ? 'Đã lưu vào Lookbook ✓' : 'Lưu Lookbook'}
           </button>
         )}
         <button
           onClick={onChiaSe}
-          className="flex-1 border border-ink-soft/30 font-medium py-2.5 rounded-md hover:border-gold transition"
+          className="min-w-32 flex-1 border border-ink-soft/30 font-medium py-2.5 rounded-md hover:border-gold transition"
         >
           {daSaoChep ? 'Đã sao chép ✓' : 'Chia sẻ'}
+        </button>
+        <button
+          onClick={xuLySaoChepLink}
+          className="min-w-32 flex-1 border border-ink-soft/30 font-medium py-2.5 rounded-md hover:border-gold transition"
+        >
+          {daChepLink ? 'Đã chép link ✓' : 'Sao chép link'}
         </button>
       </div>
     </div>
