@@ -4,11 +4,13 @@ import { useState } from 'react';
 import Link from 'next/link';
 import XemTruoc from '@/components/phoi-do/XemTruoc';
 import GhiChuAnhAI from '@/components/phoi-do/GhiChuAnhAI';
+import { GIAO_DIEN_MUC_DO } from '@/components/phoi-do/CanhBaoVanHoa';
+import { mucVanHoaDeHienThi } from '@/lib/canhBaoVanHoa';
 import { taoNoiDungChiaSe, taoLinkChiaSe, taoThamSoPhoiDo, saoChepChiaSe } from '@/lib/chiaSe';
 import { taiAnhVe, taoTenFileAnh } from '@/lib/taiAnh';
 import type { LookbookItem } from '@/lib/localLookbook';
 import { layPhuKienIds } from '@/lib/localLookbook';
-import type { TrangPhuc, SuKien, MauSac, PhuKien } from '@/types/phoi-do';
+import type { TrangPhuc, SuKien, MauSac, PhuKien, MucDoVanHoa } from '@/types/phoi-do';
 
 interface Props {
   item: LookbookItem;
@@ -21,6 +23,15 @@ interface Props {
   onToggleYeuThich: (id: string) => void;
   onXoa: (id: string) => void;
 }
+
+/** Món cần chú ý xếp trước, món phù hợp xếp sau. */
+const THU_TU_MUC: Record<MucDoVanHoa, number> = {
+  khong_phu_hop: 0,
+  tuy_dip: 1,
+  chua_co_du_lieu: 2,
+  phu_hop: 3,
+  khong_co_phu_kien: 4,
+};
 
 export default function TheLookbook({
   item,
@@ -37,7 +48,6 @@ export default function TheLookbook({
   const [dangTaiAnh, setDangTaiAnh] = useState(false);
   const [thongBaoTai, setThongBaoTai] = useState<string | null>(null);
 
-  const canhBao = item.ketQuaKiemTra?.phuHopVanHoa?.canhBao ?? false;
   // Lưu ý: trường `suKienNgauNhien` giữ tên cũ; nay nghĩa là "dịp do hệ thống chọn mặc định".
   const meta = [
     suKien ? (item.suKienNgauNhien ? `${suKien.ten} (dịp mặc định)` : suKien.ten) : null,
@@ -45,6 +55,22 @@ export default function TheLookbook({
   ]
     .filter(Boolean)
     .join(' · ');
+
+  // ===== Cảnh báo văn hoá (từ kết quả thẩm định đã lưu cùng bộ phối) =====
+  const pv = item.ketQuaKiemTra?.phuHopVanHoa ?? null;
+  // Món "chưa có dữ liệu" không hiện ra cho người dùng (giống trang phối đồ). Bộ cũ không có chiTietPhuKien thì mảng rỗng.
+  const monDaDanhGia = (pv?.chiTietPhuKien ?? [])
+    .filter((c) => c.mucDo !== 'chua_co_du_lieu' && c.mucDo !== 'khong_co_phu_kien')
+    .sort((a, b) => THU_TU_MUC[a.mucDo] - THU_TU_MUC[b.mucDo]);
+  const monCanLuuY = monDaDanhGia.filter((c) => c.mucDo === 'khong_phu_hop' || c.mucDo === 'tuy_dip');
+  // Mức tổng thể; null khi mọi món đều chưa có dữ liệu.
+  const mucTong = pv ? mucVanHoaDeHienThi(pv) : null;
+  const gdChung = mucTong ? (GIAO_DIEN_MUC_DO[mucTong] ?? null) : null;
+  const chuaDungPhuKien = pv?.mucDo === 'khong_co_phu_kien';
+  // Bộ cũ chỉ có cờ canhBao (không có mức) -> vẫn giữ cảnh báo chung.
+  const canhBaoCu = Boolean(pv?.canhBao) && !gdChung && !chuaDungPhuKien;
+  // Bộ lưu khi chưa chọn dịp: nhận định văn hoá kém tin cậy hơn.
+  const canNhacDip = Boolean(item.suKienNgauNhien) && monCanLuuY.length > 0;
 
   // Tham số mở lại bộ phối: chỉ mang dịp do người dùng chọn (dịp mặc định thì để trống,
   // khi mở lại hệ thống tự dùng dịp mặc định).
@@ -149,10 +175,75 @@ export default function TheLookbook({
           </span>
         </div>
 
-        {item.ketQuaKiemTra && (
-          <p className={`text-xs ${canhBao ? 'text-lacquer' : 'text-jade'}`}>
-            {canhBao ? '⚠ Có điểm cần lưu ý về văn hoá' : '✓ Đã kiểm tra chuẩn văn hoá'}
-          </p>
+        {/* ===== Chuẩn mực văn hoá ===== */}
+        {gdChung && (
+          <div className="space-y-1.5">
+            <p className={`flex items-center gap-1.5 text-xs font-medium ${gdChung.chu}`}>
+              <span
+                aria-hidden
+                className={`flex h-4 w-4 shrink-0 items-center justify-center rounded-full text-[10px] font-bold ${gdChung.tron}`}
+              >
+                {gdChung.bieuTuong}
+              </span>
+              Chuẩn mực văn hoá: {gdChung.nhan}
+            </p>
+
+            {monDaDanhGia.length > 0 && (
+              <ul className="flex flex-wrap gap-1.5" aria-label="Mức phù hợp văn hoá của từng phụ kiện">
+                {monDaDanhGia.map((c) => {
+                  const gd = GIAO_DIEN_MUC_DO[c.mucDo];
+                  if (!gd) return null;
+                  return (
+                    <li
+                      key={c.phuKien.id}
+                      className="inline-flex items-center gap-1 rounded-full border border-ink-soft/20 px-2 py-0.5 text-xs"
+                    >
+                      <span
+                        aria-hidden
+                        className={`flex h-4 w-4 shrink-0 items-center justify-center rounded-full text-[10px] font-bold ${gd.tron}`}
+                      >
+                        {gd.bieuTuong}
+                      </span>
+                      {c.phuKien.ten}
+                      <span className="sr-only">: {gd.nhan}</span>
+                    </li>
+                  );
+                })}
+              </ul>
+            )}
+
+            {monCanLuuY.length > 0 && (
+              <details className="text-xs text-ink-soft">
+                <summary className="cursor-pointer select-none font-medium text-ink hover:underline">
+                  Xem lý do
+                </summary>
+                <ul className="mt-1 space-y-1">
+                  {monCanLuuY.map((c) => (
+                    <li key={c.phuKien.id}>
+                      <span className="font-medium text-ink">{c.phuKien.ten}: </span>
+                      {c.lyDo ?? 'Chưa có ghi chú cho món này.'}
+                    </li>
+                  ))}
+                </ul>
+              </details>
+            )}
+
+            {canNhacDip && (
+              <p className="text-[11px] text-ink-soft">
+                <span aria-hidden>ⓘ </span>
+                Bộ này lưu khi chưa chọn dịp nên nhận định có độ tin cậy thấp hơn. Bấm “Phối lại” và chọn dịp để
+                xem lại.
+              </p>
+            )}
+          </div>
+        )}
+
+        {chuaDungPhuKien && (
+          <p className="text-xs text-ink-soft">Chưa dùng phụ kiện nên chưa có gì để đối chiếu văn hoá.</p>
+        )}
+
+        {canhBaoCu && (
+          <p className="text-xs text-lacquer">⚠ Có điểm cần lưu ý về văn hoá. Bấm “Phối lại” để xem chi tiết.</p>
         )}
 
         {thongBaoTai && (

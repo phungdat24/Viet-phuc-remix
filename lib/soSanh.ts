@@ -8,6 +8,7 @@ export const TOI_DA_BO_SO_SANH = 2;
 /** Dịp dùng để lấy ảnh AI khi chưa chọn dịp — phải khớp TEN_DIP_MAC_DINH trong ThuNghiemPhoiDoClient. */
 export const TEN_DIP_MAC_DINH = 'Tết';
 
+const TOI_DA_PHU_KIEN = 10;
 const KEY = 'viet-phuc-remix-so-sanh';
 /** Phát khi ngăn so sánh đổi để các component cập nhật ngay, không cần tải lại trang. */
 export const SU_KIEN_SO_SANH = 'viet-phuc-so-sanh-doi';
@@ -91,6 +92,65 @@ export function thayBo(id: string, capNhat: Partial<BoMoi>): void {
 
 export function xoaHetNgan(): void {
   ghiNgan([]);
+}
+
+/** Thay toàn bộ ngăn bằng các bộ mới (dùng khi mở link so sánh được chia sẻ). Bỏ bộ trùng, tối đa 2 bộ. */
+export function datNgan(cacBo: BoMoi[]): BoSoSanh[] {
+  const ketQua: BoSoSanh[] = [];
+  for (const moi of cacBo) {
+    if (ketQua.length >= TOI_DA_BO_SO_SANH) break;
+    if (ketQua.some((b) => khoaBo(b) === khoaBo(moi))) continue;
+    ketQua.push({ ...moi, id: crypto.randomUUID(), taoLuc: Date.now() });
+  }
+  ghiNgan(ketQua);
+  return ketQua;
+}
+
+// ---------- Link so sánh ----------
+
+const TIEN_TO_BO = ['a', 'b'] as const;
+
+/**
+ * Link tuyệt đối tới trang so sánh: /phoi-do/so-sanh?aTp=..&aMc=..&aMp=..&aPk=x,y&bTp=...&dip=..
+ * Chỉ gọi ở trình duyệt. `suKienId` chỉ nên là dịp do NGƯỜI DÙNG chọn (null nếu chưa chọn).
+ * Trả '' nếu không có bộ nào.
+ */
+export function taoLinkSoSanh(
+  cacBo: Pick<BoSoSanh, 'trangPhucId' | 'mauChinhId' | 'mauPhuId' | 'phuKienIds'>[],
+  suKienId: string | null,
+): string {
+  if (typeof window === 'undefined' || cacBo.length === 0) return '';
+  const p = new URLSearchParams();
+  cacBo.slice(0, TOI_DA_BO_SO_SANH).forEach((bo, i) => {
+    const t = TIEN_TO_BO[i];
+    p.set(`${t}Tp`, bo.trangPhucId);
+    p.set(`${t}Mc`, bo.mauChinhId);
+    p.set(`${t}Mp`, bo.mauPhuId);
+    if (bo.phuKienIds.length > 0) p.set(`${t}Pk`, bo.phuKienIds.join(','));
+  });
+  if (suKienId) p.set('dip', suKienId);
+  return `${window.location.origin}/phoi-do/so-sanh?${p.toString().replace(/%2C/g, ',')}`;
+}
+
+/** Đọc các bộ từ URL của trang so sánh. null = URL không có bộ hợp lệ nào. */
+export function docSoSanhTuUrl(params: URLSearchParams): { cacBo: BoMoi[]; suKienId: string | null } | null {
+  const suKienId = params.get('dip') || null;
+  const cacBo: BoMoi[] = [];
+  for (const t of TIEN_TO_BO) {
+    const tp = params.get(`${t}Tp`);
+    const mc = params.get(`${t}Mc`);
+    const mp = params.get(`${t}Mp`);
+    if (!tp || !mc || !mp) continue;
+    const pk = (params.get(`${t}Pk`) ?? '').split(',').filter(Boolean).slice(0, TOI_DA_PHU_KIEN);
+    cacBo.push({
+      trangPhucId: tp,
+      mauChinhId: mc,
+      mauPhuId: mp,
+      phuKienIds: Array.from(new Set(pk)),
+      suKienId,
+    });
+  }
+  return cacBo.length > 0 ? { cacBo, suKienId } : null;
 }
 
 // ---------- So sánh (hàm thuần, không đụng trình duyệt) ----------
@@ -197,12 +257,16 @@ export function taoTomTat(a: BoDaGiai, b: BoDaGiai, kb: KhacBiet): string {
   return `Hai bộ khác nhau ở: ${phan.join('; ')}.`;
 }
 
-/** Nội dung sao chép khi chia sẻ bảng so sánh. */
+/**
+ * Nội dung sao chép khi chia sẻ bảng so sánh.
+ * Có `linkSoSanh` thì chỉ kèm MỘT link mở lại trang so sánh; không có thì kèm link từng bộ (cách cũ).
+ */
 export function taoNoiDungChiaSeSoSanh(
   a: BoDaGiai,
   b: BoDaGiai,
   suKien: SuKien | null,
   tomTat: string,
+  linkSoSanh?: string,
 ): string {
   const mot = (x: BoDaGiai) => {
     const mota = taoNoiDungChiaSe({
@@ -212,6 +276,7 @@ export function taoNoiDungChiaSeSoSanh(
       mauPhu: x.mauPhu,
       cacPhuKien: x.cacPhuKien,
     }).replace(/^Việt Phục Remix:\s*/, '');
+    if (linkSoSanh) return mota;
     // Link mở lại đúng bộ này ở trang phối đồ (chỉ mang dịp do người dùng chọn).
     const link = taoLinkChiaSe({
       trangPhucId: x.bo.trangPhucId,
@@ -222,5 +287,6 @@ export function taoNoiDungChiaSeSoSanh(
     });
     return link ? `${mota}\n   Thử phối: ${link}` : mota;
   };
-  return `So sánh 2 bộ phối trên Việt Phục Remix\nBộ A: ${mot(a)}\nBộ B: ${mot(b)}\n${tomTat}`;
+  const dau = `So sánh 2 bộ phối trên Việt Phục Remix\nBộ A: ${mot(a)}\nBộ B: ${mot(b)}\n${tomTat}`;
+  return linkSoSanh ? `${dau}\nXem so sánh: ${linkSoSanh}` : dau;
 }

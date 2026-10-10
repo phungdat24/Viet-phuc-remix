@@ -1,8 +1,16 @@
 import { NextRequest, NextResponse } from "next/server";
+import { Prisma } from "@prisma/client";
 import { kiemTraQuyTacVanHoa, KhongTimThayError } from "@/lib/rules/quyTacVanHoa";
 import { kiemTraHoaHopMau } from "@/lib/rules/hoaHopMauSac";
 
 const TOI_DA_PHU_KIEN = 10;
+
+/** Lỗi không kết nối được database (vd: Supabase Free đang tạm dừng). */
+function laLoiMatKetNoiDb(error: unknown): boolean {
+  if (error instanceof Prisma.PrismaClientInitializationError) return true;
+  const noiDung = error instanceof Error ? error.message : "";
+  return /can't reach database server|P1001|P1002/i.test(noiDung);
+}
 
 /**
  * POST /api/kiem-tra-phoi-do
@@ -29,6 +37,9 @@ const TOI_DA_PHU_KIEN = 10;
  *    }
  *  }
  * `canhBao` + `lyDo` và `mucDo` + `goiY` khớp với `ketQuaKiemTra` trong lib/localLookbook.ts.
+ *
+ * Lỗi: 400 (dữ liệu sai), 404 (id không còn trong database, thường do link/bộ lưu từ trước khi seed lại),
+ *       503 (không kết nối được database), 500 (lỗi khác).
  */
 export async function POST(request: NextRequest) {
   let body: unknown;
@@ -80,7 +91,22 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ data: { phuHopVanHoa, haiHoaMau } });
   } catch (error) {
     if (error instanceof KhongTimThayError) {
-      return NextResponse.json({ error: error.message }, { status: 404 });
+      // Chi tiết (có id) chỉ ghi vào log; người dùng chỉ thấy câu dễ hiểu.
+      console.warn("[POST /api/kiem-tra-phoi-do] id không tồn tại:", error.message);
+      return NextResponse.json(
+        {
+          error:
+            "Một số lựa chọn trong bộ phối này không còn trong hệ thống (có thể do dữ liệu đã được cập nhật). Hãy chọn lại trang phục, màu và phụ kiện.",
+        },
+        { status: 404 },
+      );
+    }
+    if (laLoiMatKetNoiDb(error)) {
+      console.error("[POST /api/kiem-tra-phoi-do] mất kết nối database:", error);
+      return NextResponse.json(
+        { error: "Hệ thống dữ liệu đang tạm nghỉ hoặc quá tải. Vui lòng thử lại sau ít phút." },
+        { status: 503 },
+      );
     }
     console.error("[POST /api/kiem-tra-phoi-do]", error);
     return NextResponse.json({ error: "Không thể kiểm tra phối đồ." }, { status: 500 });

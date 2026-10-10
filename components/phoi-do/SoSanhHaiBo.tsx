@@ -1,8 +1,10 @@
 'use client';
 
-import { useEffect, useState, type ReactNode } from 'react';
+import { useEffect, useRef, useState, type ReactNode } from 'react';
 import Link from 'next/link';
+import { useRouter, useSearchParams } from 'next/navigation';
 import XemTruoc from './XemTruoc';
+import GhiChuAnhAI from './GhiChuAnhAI';
 import { GIAO_DIEN_MUC_DO } from './CanhBaoVanHoa';
 import { useDanhMuc } from '@/hooks/useDanhMuc';
 import { useNganSoSanh } from '@/hooks/useNganSoSanh';
@@ -15,7 +17,10 @@ import { saoChepChiaSe } from '@/lib/chiaSe';
 import {
   NHAN_MUC_MAU,
   TEN_DIP_MAC_DINH,
+  datNgan,
+  docSoSanhTuUrl,
   khoaBo,
+  taoLinkSoSanh,
   taoNoiDungChiaSeSoSanh,
   taoTomTat,
   tinhKhacBiet,
@@ -125,25 +130,74 @@ function Dong({ nhan, khac, a, b }: { nhan: string; khac: boolean; a: ReactNode;
 }
 
 export default function SoSanhHaiBo() {
+  const searchParams = useSearchParams();
+  const router = useRouter();
   const { danhMuc, loi, dangTai } = useDanhMuc();
   const { cacBo, daDoc, thay, xoa, xoaHet } = useNganSoSanh();
 
   // undefined = chưa khởi tạo; null = chưa chọn dịp. Một dịp chung cho cả hai bộ.
   const [suKienChung, setSuKienChung] = useState<string | null | undefined>(undefined);
   const [trangThai, setTrangThai] = useState<Record<string, TrangThaiBo>>({});
-  const [cheDo, setCheDo] = useState<'2d' | 'ai'>('2d');
+  // null = tự động (có đủ ảnh AI của cả hai bộ thì hiện ảnh AI, không thì hiện 2D).
+  const [cheDo, setCheDo] = useState<'2d' | 'ai' | null>(null);
+  // URL ảnh đã tải lỗi (file không còn trên kho lưu trữ) -> coi như chưa có ảnh.
+  const [anhLoi, setAnhLoi] = useState<string[]>([]);
   const [daLuu, setDaLuu] = useState<string[]>([]);
   const [daSaoChep, setDaSaoChep] = useState(false);
+  const [daChepLinkSoSanh, setDaChepLinkSoSanh] = useState(false);
+  // Thông báo: vừa mở link được chia sẻ / vừa gỡ bộ không còn hợp lệ.
+  const [thongBaoNhap, setThongBaoNhap] = useState<string | null>(null);
+  const [thongBaoGo, setThongBaoGo] = useState<string | null>(null);
+  // Chỉ đọc link chia sẻ MỘT lần; nếu đã đặt dịp từ link thì bỏ qua bước lấy dịp từ ngăn cũ.
+  const daNhapUrl = useRef(false);
+  const daDatDipTuUrl = useRef(false);
 
   // Quy tắc văn hoá của từng bộ (để gợi ý món thay thế). Luôn gọi đủ 2 hook, trước mọi return sớm.
   const { quyTac: quyTacA } = useQuyTacVanHoa(cacBo[0]?.trangPhucId ?? null);
   const { quyTac: quyTacB } = useQuyTacVanHoa(cacBo[1]?.trangPhucId ?? null);
 
-  // Dịp chung ban đầu = dịp của bộ đầu tiên có chọn dịp.
+  // (1) Mở link so sánh được chia sẻ: thay ngăn bằng các bộ trong link rồi xoá tham số khỏi URL
+  // (để F5 hoặc chỉnh sửa sau đó không bị link ghi đè lại). PHẢI khai báo trước effect khởi tạo dịp.
   useEffect(() => {
-    if (!daDoc || suKienChung !== undefined) return;
+    if (!daDoc || daNhapUrl.current) return;
+    daNhapUrl.current = true;
+    const tuUrl = docSoSanhTuUrl(searchParams);
+    if (!tuUrl) return;
+    const coNganCu = cacBo.length > 0;
+    datNgan(tuUrl.cacBo);
+    daDatDipTuUrl.current = true;
+    setSuKienChung(tuUrl.suKienId);
+    setThongBaoNhap(
+      coNganCu
+        ? 'Đã mở bộ so sánh được chia sẻ. Ngăn so sánh trước đó của bạn đã được thay bằng các bộ này.'
+        : 'Đã mở bộ so sánh được chia sẻ.',
+    );
+    router.replace('/phoi-do/so-sanh', { scroll: false });
+  }, [daDoc, searchParams, cacBo, router]);
+
+  // (2) Dịp chung ban đầu = dịp của bộ đầu tiên có chọn dịp.
+  useEffect(() => {
+    if (!daDoc || suKienChung !== undefined || daDatDipTuUrl.current) return;
     setSuKienChung(cacBo.find((b) => b.suKienId)?.suKienId ?? null);
   }, [daDoc, cacBo, suKienChung]);
+
+  // (3) Gỡ bộ có lựa chọn không còn trong danh mục (thường do seed lại database hoặc link từ bản khác).
+  useEffect(() => {
+    if (!danhMuc || !daDoc) return;
+    const co = (ds: { id: string }[], id: string) => ds.some((x) => x.id === id);
+    const hong = cacBo.filter(
+      (bo) =>
+        !co(danhMuc.trangPhuc, bo.trangPhucId) ||
+        !co(danhMuc.mauSac, bo.mauChinhId) ||
+        !co(danhMuc.mauSac, bo.mauPhuId) ||
+        bo.phuKienIds.some((id) => !co(danhMuc.phuKien, id)),
+    );
+    if (hong.length === 0) return;
+    hong.forEach((bo) => xoa(bo.id));
+    setThongBaoGo(
+      `Đã gỡ ${hong.length} bộ khỏi ngăn so sánh vì có lựa chọn không còn trong hệ thống (có thể do dữ liệu đã được cập nhật hoặc link từ bản khác). Hãy phối lại và thêm vào so sánh.`,
+    );
+  }, [danhMuc, daDoc, cacBo, xoa]);
 
   // Dịp dùng để tra ảnh AI: dịp đã chọn, hoặc dịp mặc định (Tết) như trang phối đồ.
   const dipMacDinhId =
@@ -178,6 +232,7 @@ export default function SoSanhHaiBo() {
   const tatCaPhuKien = danhMuc.phuKien;
   const quyTacTheoBo: (QuyTacVanHoa[] | null)[] = [quyTacA, quyTacB];
   const suKienDangDung = suKienChung ? (danhMuc.suKien.find((s) => s.id === suKienChung) ?? null) : null;
+  const tenDipAnh = danhMuc.suKien.find((s) => s.id === suKienAnhId)?.ten ?? TEN_DIP_MAC_DINH;
 
   const boDaGiai: BoDaGiai[] = cacBo.map((bo) => ({
     bo,
@@ -194,13 +249,24 @@ export default function SoSanhHaiBo() {
   const coHaiBo = boDaGiai.length === 2;
   const ttBo = (x: BoDaGiai): TrangThaiBo =>
     trangThai[x.bo.id] ?? { dang: true, loi: null, ketQua: null, anh: null };
+  // Ảnh AI dùng được = đã tra thấy và chưa bị lỗi tải.
+  const anhDung = (x: BoDaGiai): AnhAI | null => {
+    const anh = ttBo(x).anh;
+    return anh && !anhLoi.includes(anh.imageUrl) ? anh : null;
+  };
   const coKetQuaCaHai = coHaiBo && Boolean(a.ketQua && b.ketQua);
   const khac = coHaiBo ? tinhKhacBiet(a, b) : null;
   const tomTat = coKetQuaCaHai && khac ? taoTomTat(a, b, khac) : null;
 
   // Chỉ so sánh ảnh AI khi CẢ HAI bộ đã có ảnh sẵn; nếu không thì dùng xem trước 2D.
-  const coAnhCaHai = coHaiBo && Boolean(ttBo(a).anh && ttBo(b).anh);
-  const cheDoDangDung = coAnhCaHai ? cheDo : '2d';
+  const coAnhCaHai = coHaiBo && Boolean(anhDung(a) && anhDung(b));
+  const cheDoDangDung: '2d' | 'ai' = coAnhCaHai ? (cheDo ?? 'ai') : '2d';
+  // Bộ nào chưa có ảnh (chỉ báo khi đã tra xong, tránh nháy thông báo lúc đang tải).
+  const dangTraAnh = coHaiBo && boDaGiai.some((x) => ttBo(x).dang);
+  const boThieuAnh =
+    coHaiBo && !dangTraAnh
+      ? boDaGiai.map((x, i) => ({ x, i })).filter(({ x }) => !anhDung(x))
+      : [];
 
   function duongDanSua(bo: BoSoSanh): string {
     const p = new URLSearchParams({
@@ -242,7 +308,7 @@ export default function SoSanhHaiBo() {
 
   function luuVaoLookbook(x: BoDaGiai) {
     if (!x.ketQua) return;
-    const anh = ttBo(x).anh;
+    const anh = anhDung(x);
     saveLookbook({
       trangPhucId: x.bo.trangPhucId,
       suKienId: suKienChung ?? dipMacDinhId,
@@ -259,9 +325,18 @@ export default function SoSanhHaiBo() {
 
   async function chiaSe() {
     if (!coHaiBo) return;
-    const noiDung = taoNoiDungChiaSeSoSanh(a, b, suKienDangDung, tomTat ?? '');
+    const link = taoLinkSoSanh(cacBo, suKienChung ?? null);
+    const noiDung = taoNoiDungChiaSeSoSanh(a, b, suKienDangDung, tomTat ?? '', link || undefined);
     if (!noiDung) return;
     setDaSaoChep(await saoChepChiaSe(noiDung));
+  }
+
+  async function chepLinkSoSanh() {
+    const link = taoLinkSoSanh(cacBo, suKienChung ?? null);
+    if (!link) return;
+    const thanhCong = await saoChepChiaSe(link);
+    setDaChepLinkSoSanh(thanhCong);
+    if (thanhCong) setTimeout(() => setDaChepLinkSoSanh(false), 2000);
   }
 
   // ---------- Các ô nội dung ----------
@@ -297,7 +372,7 @@ export default function SoSanhHaiBo() {
         <p className="mt-0.5 text-xs">
           {x.ketQua!.haiHoaMau.lyDo ? (
             <>
-              <span className="font-medium">Vì sao: </span>
+              <span className="font-medium">Giải thích: </span>
               {x.ketQua!.haiHoaMau.lyDo}
             </>
           ) : (
@@ -375,7 +450,8 @@ export default function SoSanhHaiBo() {
   };
 
   const theBo = (x: BoDaGiai, chiSo: number) => {
-    const anh = ttBo(x).anh;
+    const anh = anhDung(x);
+    const hienAnh = cheDoDangDung === 'ai' && anh !== null;
     return (
       <div className="min-w-0 rounded-xl bg-paper-raised p-3 md:p-4">
         <div className="mb-2 flex items-center justify-between gap-2">
@@ -397,12 +473,16 @@ export default function SoSanhHaiBo() {
             </button>
           </div>
         </div>
-        <div className="relative h-60 overflow-hidden rounded-md bg-paper md:h-72">
-          {cheDoDangDung === 'ai' && anh ? (
+        {/* Ảnh AI là ảnh dọc toàn thân nên khung cao hơn khung xem trước 2D. */}
+        <div
+          className={`relative overflow-hidden rounded-md bg-paper ${hienAnh ? 'h-80 md:h-112' : 'h-60 md:h-72'}`}
+        >
+          {hienAnh && anh ? (
             // eslint-disable-next-line @next/next/no-img-element
             <img
               src={anh.imageUrl}
               alt={`Ảnh AI ${NHAN_SLOT[chiSo]}`}
+              onError={() => setAnhLoi((truoc) => [...truoc, anh.imageUrl])}
               className="h-full w-full object-contain"
             />
           ) : (
@@ -470,11 +550,23 @@ export default function SoSanhHaiBo() {
                 cheDoDangDung === 'ai' ? 'bg-ink text-paper' : 'hover:bg-paper-raised'
               }`}
             >
-              Ảnh AI{coAnhCaHai ? ' · cả hai đã có' : ''}
+              Ảnh AI{coAnhCaHai ? '' : ' · chưa đủ'}
             </button>
           </div>
         </div>
       </div>
+
+      {thongBaoNhap && (
+        <p role="status" className="rounded-md bg-paper-raised p-2.5 text-xs text-ink-soft">
+          <span aria-hidden>ⓘ </span>
+          {thongBaoNhap}
+        </p>
+      )}
+      {thongBaoGo && (
+        <p role="status" className="rounded-md border border-lacquer/40 bg-lacquer/10 p-2.5 text-xs text-lacquer">
+          {thongBaoGo}
+        </p>
+      )}
 
       {boDaGiai.length === 0 && (
         <div className="rounded-xl bg-paper-raised p-6 text-center">
@@ -514,6 +606,31 @@ export default function SoSanhHaiBo() {
             {theBo(b, 1)}
           </div>
 
+          {cheDoDangDung === 'ai' && <GhiChuAnhAI />}
+
+          {boThieuAnh.length > 0 && (
+            <div role="status" className="rounded-md bg-paper-raised p-3 text-xs text-ink-soft">
+              <p>
+                <span aria-hidden>ⓘ </span>
+                Chưa so sánh được ảnh AI vì{' '}
+                {boThieuAnh.map(({ i }) => NHAN_SLOT[i]).join(' và ')} chưa có ảnh sẵn cho dịp{' '}
+                <b className="font-semibold">{tenDipAnh}</b> (hoặc ảnh không tải được). Trang này chỉ tra ảnh đã
+                có, không sinh ảnh mới. Muốn có ảnh, mở bộ đó ở trang phối đồ rồi bấm “Xem kết quả phối đồ”.
+              </p>
+              <div className="mt-2 flex flex-wrap gap-2">
+                {boThieuAnh.map(({ x, i }) => (
+                  <Link
+                    key={x.bo.id}
+                    href={duongDanSua(x.bo)}
+                    className="inline-flex min-h-11 items-center rounded-md border border-lacquer px-3 font-semibold text-lacquer hover:bg-lacquer/5"
+                  >
+                    Sinh ảnh {NHAN_SLOT[i]} ở trang phối đồ →
+                  </Link>
+                ))}
+              </div>
+            </div>
+          )}
+
           <div className="space-y-2">
             {khac?.trangPhuc && (
               <Dong
@@ -552,6 +669,13 @@ export default function SoSanhHaiBo() {
               className="min-h-12 rounded-md border border-ink-soft/30 px-4 text-sm font-medium hover:border-gold"
             >
               {daSaoChep ? 'Đã sao chép ✓' : 'Chia sẻ so sánh'}
+            </button>
+            <button
+              type="button"
+              onClick={chepLinkSoSanh}
+              className="min-h-12 rounded-md border border-ink-soft/30 px-4 text-sm font-medium hover:border-gold"
+            >
+              {daChepLinkSoSanh ? 'Đã chép link ✓' : 'Sao chép link so sánh'}
             </button>
             {boDaGiai.map((x, i) => {
               const daLuuBo = daLuu.includes(x.bo.id);

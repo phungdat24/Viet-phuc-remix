@@ -142,7 +142,7 @@ export default function KetQuaPhoiDo({
       >
         {haiHoaMau.lyDo && (
           <p className="mt-1 text-xs text-ink-soft">
-            <span className="font-medium text-ink">Vì sao: </span>
+            <span className="font-medium text-ink">Giải thích: </span>
             {haiHoaMau.lyDo}
           </p>
         )}
@@ -230,4 +230,4 @@ export default function KetQuaPhoiDo({
       </div>
     </div>
   );
-}
+}
