@@ -1,0 +1,42 @@
+D:\Học tập trên trường\kì 1 2026-2027\AREA-AI\Viet-phuc-remix>npx tsx --env-file=.env scripts/sua-url-anh.ts --ap-dung
+== CHẾ ĐỘ SỬA ==
+Kiểm tra 193 ảnh...
+
+✗ b87265f8-d79e-455d-9067-3543d82ebd14:62f10f93-e79c-4c4d-8d6d-be11eab42596:46644025-545c-4afa-95da-2f0424df1f9f:e38c0a8b-168d-4fb4-b824-32c6921d399f:26a87350-102d-4ea5-85f9-e0ff2368cb83
+    404 và đường dẫn không có "+": file có thể đã bị xoá khỏi bucket -> nạp lại ảnh (nap-anh --ghi-de)    manual/ao-tu-than/ao-tu-than_do-son_hong-dao_non-quai-thao_chup-anh-nghe-thuat_20261006_6e8db4_muw7rl4i.webp
+✗ 26d8bc21-5078-4421-a6dc-b035aff71230:46644025-545c-4afa-95da-2f0424df1f9f:83f651a6-f825-4633-96b1-56b2a502716c:3f3111b5-d764-4882-a672-cf84efb8d093:028e075e-60cd-4c7c-8963-69286f52811e
+    404 và đường dẫn không có "+": file có thể đã bị xoá khỏi bucket -> nạp lại ảnh (nap-anh --ghi-de)    ai/ao-dai/ao-dai_hong-dao_den-huyen_cuoi-hoi_e24e60697f_muw42v1l.webp
+✗ df7cc485-5e09-47f9-9c25-ca69e0e4551e:46644025-545c-4afa-95da-2f0424df1f9f:83f651a6-f825-4633-96b1-56b2a502716c:e38c0a8b-168d-4fb4-b824-32c6921d399f:4d76405c-d7b3-46db-b263-21c498f65830
+    404 và đường dẫn không có "+": file có thể đã bị xoá khỏi bucket -> nạp lại ảnh (nap-anh --ghi-de)    ai/ao-ba-ba/ao-ba-ba_hong-dao_den-huyen_tet_be5071c9f2_muw42xtz.webp
+✗ 26d8bc21-5078-4421-a6dc-b035aff71230:62f10f93-e79c-4c4d-8d6d-be11eab42596:d25a4df1-2412-4ee5-8a0f-02d0d3548cac:khong-phu-kien:028e075e-60cd-4c7c-8963-69286f52811e
+    404 và đường dẫn không có "+": file có thể đã bị xoá khỏi bucket -> nạp lại ảnh (nap-anh --ghi-de)    ai/ao-dai/ao-dai_do-son_trang-nga_cuoi-hoi_3586e5ed77_muw4kx40.webp
+✗ df7cc485-5e09-47f9-9c25-ca69e0e4551e:b9deb6b5-2ccb-4f82-bbaf-6929c9fd3bff:62f10f93-e79c-4c4d-8d6d-be11eab42596:78653b1c-d81c-4636-b664-44765f0925b4:4d76405c-d7b3-46db-b263-21c498f65830
+    404 và đường dẫn không có "+": file có thể đã bị xoá khỏi bucket -> nạp lại ảnh (nap-anh --ghi-de)    manual/ao-ba-ba/ao-ba-ba_luc-ngoc_do-son_khan-ran_tet_20261006_8e5aa8_muw7rhkb.webp
+✗ df7cc485-5e09-47f9-9c25-ca69e0e4551e:46644025-545c-4afa-95da-2f0424df1f9f:83f651a6-f825-4633-96b1-56b2a502716c:1b861597-b7cf-4469-aa84-b50e688ad740:53530504-0d04-4407-bd7e-407ddf4f4e00
+    404 và đường dẫn không có "+": file có thể đã bị xoá khỏi bucket -> nạp lại ảnh (nap-anh --ghi-de)    manual/ao-ba-ba/ao-ba-ba_hong-dao_den-huyen_non-la_di-hoc-dao-pho_20261006_2adeae_muw88swk.webp
+✗ b87265f8-d79e-455d-9067-3543d82ebd14:a99b2d9f-0f33-46f0-bf7e-3a19400f0f7a:83f651a6-f825-4633-96b1-56b2a502716c:310d89b0-1e8f-45ab-abb3-6a1caa2ee69c:21979b38-4a61-4d16-995f-0385381b7712
+    404 và đường dẫn không có "+": file có thể đã bị xoá khỏi bucket -> nạp lại ảnh (nap-anh --ghi-de)    manual/ao-tu-than/ao-tu-than_nau-non_den-huyen_khan-mo-qua_le-hoi_20261006_aae025_muw88zws.webp
+✗ 26d8bc21-5078-4421-a6dc-b035aff71230:704f81d7-7a54-4662-b820-a65c1a465c50:5dfcac3f-1158-43ca-9dc0-3b21bd5c0257:1b861597-b7cf-4469-aa84-b50e688ad740+3f3111b5-d764-4882-a672-cf84efb8d093:26a87350-102d-4ea5-85f9-e0ff2368cb83
+    không đổi tên được (Object not found) -> file có thể không có trong bucket: manual/ao-dai/ao-dai_tim-hue_vang-nhu_tram-cai+non-la_chup-anh-nghe-thuat_20261006_73d04c_muw9hf9b.webp
+✗ 26d8bc21-5078-4421-a6dc-b035aff71230:62f10f93-e79c-4c4d-8d6d-be11eab42596:d25a4df1-2412-4ee5-8a0f-02d0d3548cac:1b861597-b7cf-4469-aa84-b50e688ad740+3f3111b5-d764-4882-a672-cf84efb8d093:028e075e-60cd-4c7c-8963-69286f52811e
+    không đổi tên được (Object not found) -> file có thể không có trong bucket: manual/ao-dai/ao-dai_do-son_trang-nga_tram-cai+non-la_cuoi-hoi_20261006_5fe417_muw9mojn.webp
+✗ 26d8bc21-5078-4421-a6dc-b035aff71230:62f10f93-e79c-4c4d-8d6d-be11eab42596:d25a4df1-2412-4ee5-8a0f-02d0d3548cac:1b861597-b7cf-4469-aa84-b50e688ad740+310d89b0-1e8f-45ab-abb3-6a1caa2ee69c+3f3111b5-d764-4882-a672-cf84efb8d093:028e075e-60cd-4c7c-8963-69286f52811e
+    404 và đường dẫn không có "+": file có thể đã bị xoá khỏi bucket -> nạp lại ảnh (nap-anh --ghi-de)    ai/ao-dai/ao-dai_do-son_trang-nga_cuoi-hoi_4fbea99089_muw9roh5.webp
+✗ df7cc485-5e09-47f9-9c25-ca69e0e4551e:46644025-545c-4afa-95da-2f0424df1f9f:83f651a6-f825-4633-96b1-56b2a502716c:1b861597-b7cf-4469-aa84-b50e688ad740+b80cf16d-075d-4204-b2f0-578c59ab7c1d+f8043cd6-47c4-45c9-beb4-2cf49603e6d8:53530504-0d04-4407-bd7e-407ddf4f4e00
+    404 và đường dẫn không có "+": file có thể đã bị xoá khỏi bucket -> nạp lại ảnh (nap-anh --ghi-de)    ai/ao-ba-ba/ao-ba-ba_hong-dao_den-huyen_di-hoc-dao-pho_58f9b6c496_muwgcy6v.webp
+✗ b87265f8-d79e-455d-9067-3543d82ebd14:a99b2d9f-0f33-46f0-bf7e-3a19400f0f7a:83f651a6-f825-4633-96b1-56b2a502716c:1b861597-b7cf-4469-aa84-b50e688ad740+310d89b0-1e8f-45ab-abb3-6a1caa2ee69c+3f3111b5-d764-4882-a672-cf84efb8d093+a34f2fe5-c029-4724-a0a3-ab0f49c775a6+fbc9415c-0250-4800-bc50-76545923d7db:4d76405c-d7b3-46db-b263-21c498f65830
+    404 và đường dẫn không có "+": file có thể đã bị xoá khỏi bucket -> nạp lại ảnh (nap-anh --ghi-de)    ai/ao-tu-than/ao-tu-than_nau-non_den-huyen_tet_af2203385b_muwujrq5.webp
+✗ 26d8bc21-5078-4421-a6dc-b035aff71230:62f10f93-e79c-4c4d-8d6d-be11eab42596:83f651a6-f825-4633-96b1-56b2a502716c:1b861597-b7cf-4469-aa84-b50e688ad740+3f3111b5-d764-4882-a672-cf84efb8d093+a34f2fe5-c029-4724-a0a3-ab0f49c775a6+b80cf16d-075d-4204-b2f0-578c59ab7c1d+f8043cd6-47c4-45c9-beb4-2cf49603e6d8:028e075e-60cd-4c7c-8963-69286f52811e
+    404 và đường dẫn không có "+": file có thể đã bị xoá khỏi bucket -> nạp lại ảnh (nap-anh --ghi-de)    ai/ao-dai/ao-dai_do-son_den-huyen_cuoi-hoi_80195c2c91_muwul834.webp
+✗ 26d8bc21-5078-4421-a6dc-b035aff71230:62f10f93-e79c-4c4d-8d6d-be11eab42596:83f651a6-f825-4633-96b1-56b2a502716c:1b861597-b7cf-4469-aa84-b50e688ad740+3f3111b5-d764-4882-a672-cf84efb8d093+a34f2fe5-c029-4724-a0a3-ab0f49c775a6+b80cf16d-075d-4204-b2f0-578c59ab7c1d+f8043cd6-47c4-45c9-beb4-2cf49603e6d8:53530504-0d04-4407-bd7e-407ddf4f4e00
+    404 và đường dẫn không có "+": file có thể đã bị xoá khỏi bucket -> nạp lại ảnh (nap-anh --ghi-de)    ai/ao-dai/ao-dai_do-son_den-huyen_di-hoc-dao-pho_dfb7d905f6_muwvn8ri.webp
+✗ b87265f8-d79e-455d-9067-3543d82ebd14:a99b2d9f-0f33-46f0-bf7e-3a19400f0f7a:83f651a6-f825-4633-96b1-56b2a502716c:3f3111b5-d764-4882-a672-cf84efb8d093+a34f2fe5-c029-4724-a0a3-ab0f49c775a6+e38c0a8b-168d-4fb4-b824-32c6921d399f+fbc9415c-0250-4800-bc50-76545923d7db:21979b38-4a61-4d16-995f-0385381b7712
+    404 và đường dẫn không có "+": file có thể đã bị xoá khỏi bucket -> nạp lại ảnh (nap-anh --ghi-de)    ai/ao-tu-than/ao-tu-than_nau-non_den-huyen_le-hoi_dc36000262_muyuufwg.webp
+✗ b87265f8-d79e-455d-9067-3543d82ebd14:a99b2d9f-0f33-46f0-bf7e-3a19400f0f7a:83f651a6-f825-4633-96b1-56b2a502716c:310d89b0-1e8f-45ab-abb3-6a1caa2ee69c+3f3111b5-d764-4882-a672-cf84efb8d093+a34f2fe5-c029-4724-a0a3-ab0f49c775a6+e38c0a8b-168d-4fb4-b824-32c6921d399f+fbc9415c-0250-4800-bc50-76545923d7db:028e075e-60cd-4c7c-8963-69286f52811e
+    404 và đường dẫn không có "+": file có thể đã bị xoá khỏi bucket -> nạp lại ảnh (nap-anh --ghi-de)    ai/ao-tu-than/ao-tu-than_nau-non_den-huyen_cuoi-hoi_5021f48724_muyv2pa0.webp
+✗ b87265f8-d79e-455d-9067-3543d82ebd14:a99b2d9f-0f33-46f0-bf7e-3a19400f0f7a:83f651a6-f825-4633-96b1-56b2a502716c:310d89b0-1e8f-45ab-abb3-6a1caa2ee69c+3f3111b5-d764-4882-a672-cf84efb8d093+a34f2fe5-c029-4724-a0a3-ab0f49c775a6+e38c0a8b-168d-4fb4-b824-32c6921d399f+fbc9415c-0250-4800-bc50-76545923d7db:21979b38-4a61-4d16-995f-0385381b7712
+    404 và đường dẫn không có "+": file có thể đã bị xoá khỏi bucket -> nạp lại ảnh (nap-anh --ghi-de)    ai/ao-tu-than/ao-tu-than_nau-non_den-huyen_le-hoi_e08e2de6c4_muyw1ja4.webp
+✗ b87265f8-d79e-455d-9067-3543d82ebd14:a99b2d9f-0f33-46f0-bf7e-3a19400f0f7a:83f651a6-f825-4633-96b1-56b2a502716c:1b861597-b7cf-4469-aa84-b50e688ad740+3f3111b5-d764-4882-a672-cf84efb8d093+78653b1c-d81c-4636-b664-44765f0925b4+a34f2fe5-c029-4724-a0a3-ab0f49c775a6+b80cf16d-075d-4204-b2f0-578c59ab7c1d+fbc9415c-0250-4800-bc50-76545923d7db:4d76405c-d7b3-46db-b263-21c498f65830
+    404 và đường dẫn không có "+": file có thể đã bị xoá khỏi bucket -> nạp lại ảnh (nap-anh --ghi-de)    ai/ao-tu-than/ao-tu-than_nau-non_den-huyen_tet_13473b43e1_mv0okdb2.webp
+
+Xong. Tải được: 175 · Đã sửa: 0 · Còn hỏng/cần xử lý: 18

@@ -8,6 +8,7 @@ import ChonPhuKien from './ChonPhuKien';
 import XemTruoc from './XemTruoc';
 import HuyHieuVanHoa, { type MucLuuYVanHoa } from './HuyHieuVanHoa';
 import KetQuaPhoiDo from './KetQuaPhoiDo';
+import NutThemSoSanh from './NutThemSoSanh';
 import { saveLookbook } from '@/lib/localLookbook';
 import { taoNoiDungChiaSe, taoLinkChiaSe, saoChepChiaSe } from '@/lib/chiaSe';
 import { taoTenFileAnh } from '@/lib/taiAnh';
@@ -16,6 +17,7 @@ import { layPhuKienChoPhep, layNhomCuaPhuKien, timMonXungDot } from '@/lib/phuKi
 import { useDanhMuc } from '@/hooks/useDanhMuc';
 import { useQuyTacVanHoa } from '@/hooks/useQuyTacVanHoa';
 import { tinhMucDoMotMon } from '@/lib/canhBaoVanHoa';
+import type { BoMoi } from '@/lib/soSanh';
 import type { KetQuaKiemTra, ToHopAI } from '@/types/phoi-do';
 import GioiThieuVanHoa from './GioiThieuVanHoa';
 import TienTrinhPhoiDo from './TienTrinhPhoiDo';
@@ -40,6 +42,8 @@ export default function ThuNghiemPhoiDoClient() {
   const [mauChinhId, setMauChinhId] = useState<string | null>(searchParams.get('mauChinhId'));
   const [mauPhuId, setMauPhuId] = useState<string | null>(searchParams.get('mauPhuId'));
   const [phuKienIds, setPhuKienIds] = useState<string[]>(() => docPhuKienTuUrl(searchParams));
+  // Có khi vào từ nút "Sửa bộ này" ở trang so sánh: khi đó nút so sánh sẽ cập nhật đúng bộ đó thay vì thêm bộ mới.
+  const [idBoDangSua] = useState<string | null>(searchParams.get('suaBoId'));
   // Quy tắc văn hoá của trang phục đang chọn (dùng cho huy hiệu cảnh báo ở khung xem trước).
   const { quyTac: quyTacVanHoa } = useQuyTacVanHoa(trangPhucId);
 
@@ -94,6 +98,10 @@ export default function ThuNghiemPhoiDoClient() {
     : [];
 
   const daChonDuDeXem = Boolean(trangPhucId && mauChinhId && mauPhuId);
+
+  // Bộ đang phối, để thêm vào ngăn so sánh (dịp = dịp người dùng chọn, không tính dịp mặc định).
+  const boHienTaiSoSanh: BoMoi | null =
+    trangPhucId && mauChinhId && mauPhuId ? { trangPhucId, mauChinhId, mauPhuId, phuKienIds, suKienId } : null;
 
   // Dịp mặc định (Tết) chỉ dùng để sinh ảnh khi người dùng chưa chọn dịp.
   // Thẩm định văn hoá KHÔNG dùng dịp này (chỉ dùng dịp người dùng tự chọn).
@@ -468,6 +476,18 @@ export default function ThuNghiemPhoiDoClient() {
             </p>
           )}
 
+          {daChonDuDeXem && (
+            <div className="shrink-0 border-t border-ink-soft/15 px-4 py-3">
+              <NutThemSoSanh
+                boHienTai={boHienTaiSoSanh}
+                idDangSua={idBoDangSua}
+                tatCaTrangPhuc={tatCaTrangPhuc}
+                tatCaMau={tatCaMau}
+                tatCaPhuKien={tatCaPhuKien}
+              />
+            </div>
+          )}
+
           {daChonDuDeXem && !ketQua && (
             <div className="p-4 border-t border-ink-soft/15 shrink-0">
               {loiKiemTra && <p className="text-sm text-lacquer mb-2">{loiKiemTra}</p>}
@@ -558,4 +578,4 @@ export default function ThuNghiemPhoiDoClient() {
       )}
     </main>
   );
-}
+}

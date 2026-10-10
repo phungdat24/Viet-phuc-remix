@@ -1,4 +1,4 @@
-import type { MucDoVanHoa, PhuKien, QuyTacVanHoa } from '@/types/phoi-do';
+import type { KetQuaPhuHopVanHoa, MucDoVanHoa, PhuKien, QuyTacVanHoa } from '@/types/phoi-do';
 import { layNhomCuaPhuKien } from '@/lib/phuKienTheoTrangPhuc';
 
 /** Nhãn hiển thị cho mức "tuy_dip" (khoá trong dữ liệu giữ nguyên để không phải đổi database). */
@@ -10,6 +10,16 @@ export const LY_DO_HOP_CO_DIEU_KIEN =
 
 /** Câu nhắc chọn dịp, dùng thống nhất ở khung Phụ kiện, kết quả thẩm định và máy chủ. */
 export const CAU_NHAC_CHON_DIP = 'Chọn dịp sử dụng ở khung bên trái để nhận xét sát hơn.';
+
+/**
+ * Mức văn hoá tổng thể để HIỂN THỊ, hoặc null nếu không có gì đáng hiện.
+ * Món "chưa có dữ liệu" không được hiện ra cho người dùng: khi mọi món đều chưa có dữ liệu thì ẩn cả khối
+ * "Chuẩn mực văn hoá"; khi chỉ một vài món thiếu thì khối vẫn hiện nhưng chỉ nêu các món đã có nhận định
+ * (máy chủ đã xếp "chưa có dữ liệu" thấp nhất nên không làm lu mờ mức của các món còn lại).
+ */
+export function mucVanHoaDeHienThi(pv: Pick<KetQuaPhuHopVanHoa, 'mucDo'>): MucDoVanHoa | null {
+  return pv.mucDo === 'chua_co_du_lieu' ? null : pv.mucDo;
+}
 
 /**
  * Tính mức độ văn hoá của MỘT phụ kiện từ danh sách quy tắc đã tải (chỉ để hiện nhanh ở giao diện).
@@ -47,4 +57,4 @@ export function timMonThayThe(
       layNhomCuaPhuKien(p.ten)?.ten === nhom.ten &&
       tinhMucDoMotMon(quyTacs, p.id, suKienId).mucDo === 'phu_hop',
   );
-}
+}

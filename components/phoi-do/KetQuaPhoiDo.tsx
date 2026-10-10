@@ -5,7 +5,7 @@ import Link from 'next/link';
 import type { KetQuaKiemTra, MucDoVanHoa, PhuKien } from '@/types/phoi-do';
 import SinhAnhAI, { type AnhAIProps } from './SinhAnhAI';
 import CanhBaoVanHoa, { GIAO_DIEN_MUC_DO, type MucCanhBaoVanHoa } from './CanhBaoVanHoa';
-import { CAU_NHAC_CHON_DIP, LY_DO_HOP_CO_DIEU_KIEN } from '@/lib/canhBaoVanHoa';
+import { CAU_NHAC_CHON_DIP, LY_DO_HOP_CO_DIEU_KIEN, mucVanHoaDeHienThi } from '@/lib/canhBaoVanHoa';
 
 const NHAN_MAU: Record<string, string> = {
   tuong_dong: 'Tương đồng',
@@ -50,13 +50,13 @@ const THU_TU_MUC: Record<MucDoVanHoa, number> = {
   khong_co_phu_kien: 4,
 };
 
-/** Chuyển kết quả từng món (chiTietPhuKien) thành các thẻ; null nếu không có (dữ liệu cũ). */
+/** Chuyển kết quả từng món (chiTietPhuKien) thành các thẻ; null nếu không có (dữ liệu cũ). Bỏ món "chưa có dữ liệu". */
 function taoCacMuc(
   pv: KetQuaKiemTra['phuHopVanHoa'],
   cacPhuKien: PhuKien[],
 ): MucCanhBaoVanHoa[] | null {
-  const chiTiet = pv.chiTietPhuKien;
-  if (!chiTiet || chiTiet.length === 0) return null;
+  const chiTiet = (pv.chiTietPhuKien ?? []).filter((c) => c.mucDo !== 'chua_co_du_lieu');
+  if (chiTiet.length === 0) return null;
 
   const vungTheoId = new Map(cacPhuKien.map((p) => [p.id, p.vungMien]));
   const tenTrangPhuc = pv.trangPhuc?.ten ?? 'trang phục này';
@@ -117,7 +117,9 @@ export default function KetQuaPhoiDo({
 
   const { haiHoaMau, phuHopVanHoa } = ketQua;
   const cacMuc = taoCacMuc(phuHopVanHoa, cacPhuKien);
-  const gdChung = GIAO_DIEN_MUC_DO[phuHopVanHoa.mucDo];
+  // null = mọi món đều chưa có dữ liệu -> không hiện khối "Chuẩn mực văn hoá" nữa.
+  const mucTong = mucVanHoaDeHienThi(phuHopVanHoa);
+  const gdChung = mucTong ? GIAO_DIEN_MUC_DO[mucTong] : null;
   const coPhuKien = phuHopVanHoa.mucDo !== 'khong_co_phu_kien';
 
   const tenMonCanLuuY = (phuHopVanHoa.chiTietPhuKien ?? [])
@@ -146,6 +148,7 @@ export default function KetQuaPhoiDo({
         )}
       </DongKetQua>
 
+      {gdChung && (
       <div className="py-3 border-t border-ink-soft/15">
         <div className="flex items-center gap-2">
           <span
@@ -176,9 +179,7 @@ export default function KetQuaPhoiDo({
             {cacMuc ? (
               <CanhBaoVanHoa cacMuc={cacMuc} />
             ) : (
-              <p className="text-sm text-ink-soft">
-                {phuHopVanHoa.lyDo ?? 'Chưa có dữ liệu quy tắc cho tổ hợp này.'}
-              </p>
+              phuHopVanHoa.lyDo && <p className="text-sm text-ink-soft">{phuHopVanHoa.lyDo}</p>
             )}
           </div>
         )}
@@ -190,6 +191,7 @@ export default function KetQuaPhoiDo({
           </p>
         )}
       </div>
+      )}
 
       <SinhAnhAI {...anhAI} canhBaoVanHoa={canhBaoDuoiAnh} />
 
@@ -228,4 +230,4 @@ export default function KetQuaPhoiDo({
       </div>
     </div>
   );
-}
+}

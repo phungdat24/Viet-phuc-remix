@@ -107,3 +107,10 @@ export async function xoaAnh(imageUrl: string | null): Promise<void> {
 }
 
 export { nenWebp };
+
+/** Dùng cho script bảo trì (scripts/sua-url-anh.ts). */
+export const TEN_BUCKET = BUCKET;
+export function layClientSupabase(): SupabaseClient {
+  return layClient();
+}
+
