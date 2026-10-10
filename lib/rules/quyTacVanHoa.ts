@@ -82,11 +82,6 @@ function gopLyDo(chiTiet: KetQuaVanHoaMotPhuKien[], mucDoChung: MucDoVanHoa): st
     })
     .filter((x): x is string => Boolean(x));
 
-  if (mucDoChung === "phu_hop") {
-    const thieu = chiTiet.filter((c) => c.mucDo === "chua_co_du_lieu").map((c) => c.phuKien.ten);
-    if (thieu.length > 0) dong.push(`Chưa có dữ liệu quy tắc cho: ${thieu.join(", ")}.`);
-  }
-
   return dong.length > 0 ? dong.join(" ") : null;
 }
 
@@ -210,4 +205,4 @@ export async function kiemTraQuyTacVanHoa(input: {
     cacPhuKien: chiTietPhuKien.map((c) => c.phuKien),
     chiTietPhuKien,
   };
-}
+}

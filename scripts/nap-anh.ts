@@ -144,7 +144,8 @@ async function main() {
       const sl = (s: string) => taoSlug(s, 20);
       const tpSlug = taoSlug(tp!.ten);
       const hash6 = crypto.createHash("sha256").update(comboKey).digest("hex").slice(0, 6);
-      const tenMoi = [tpSlug, sl(mc!.ten), sl(mp!.ten), dsPk.length ? dsPk.map((x) => sl(x.ten)).join("+") : "khong-phu-kien", sl(sk!.ten), ngayYmd(), hash6, Date.now().toString(36)].join("_");
+      const tenMoi = [tpSlug, sl(mc!.ten), sl(mp!.ten), dsPk.length ? dsPk.map((x) => sl(x.ten)).join("-") : "khong-phu-kien", sl(sk!.ten), ngayYmd(), hash6, Date.now().toString(36)].join("_");
+      // Tên file trên bucket KHÔNG được chứa "+": URL công khai có dấu + hay bị Supabase trả 404 NoSuchKey.
       const duongDan = `manual/${tpSlug}/${tenMoi}.webp`;
 
       if (CHI_THU) {

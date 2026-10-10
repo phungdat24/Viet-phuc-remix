@@ -51,6 +51,8 @@ export default function SinhAnhAI({
   // Hook phải đặt trước mọi lệnh return sớm bên dưới.
   const [dangTaiAnh, setDangTaiAnh] = useState(false);
   const [thongBaoTai, setThongBaoTai] = useState<string | null>(null);
+  // URL ảnh đã tải lỗi (vd file không còn trên kho lưu trữ) -> hiện thông báo thay vì biểu tượng ảnh vỡ.
+  const [urlAnhLoi, setUrlAnhLoi] = useState<string | null>(null);
 
   async function xuLyTaiAnh(url: string) {
     setDangTaiAnh(true);
@@ -100,21 +102,33 @@ export default function SinhAnhAI({
   const daDuyet = toHop.status === 'approved';
   const biTuChoi = toHop.status === 'rejected';
   const nhanXet = toHop.aiAssessment?.nhanXetAI ?? null;
+  const anhHong = Boolean(toHop.imageUrl) && toHop.imageUrl === urlAnhLoi;
 
   return (
     <div className="mt-3 space-y-3">
-      {toHop.imageUrl && (
+      {toHop.imageUrl && !anhHong && (
         // eslint-disable-next-line @next/next/no-img-element
         <img
           src={toHop.imageUrl}
           alt="Ảnh AI sinh cho bộ phối đồ"
+          onError={() => setUrlAnhLoi(toHop.imageUrl)}
           className="w-full max-h-160 object-contain rounded-md border border-ink-soft/15 bg-paper"
         />
       )}
 
-      {toHop.imageUrl && <GhiChuAnhAI />}
+      {anhHong && (
+        <div role="alert" className="rounded-md border border-lacquer/40 bg-lacquer/10 p-3 text-sm text-lacquer">
+          <p className="font-semibold">Không tải được ảnh của bộ phối này</p>
+          <p>
+            Tệp ảnh không còn trên kho lưu trữ. Bạn vẫn xem được kết quả thẩm định ở trên
+            {daDuyet ? '.' : '; bấm “Sinh ảnh khác” để vẽ lại.'}
+          </p>
+        </div>
+      )}
 
-      {toHop.imageUrl && (
+      {toHop.imageUrl && !anhHong && <GhiChuAnhAI />}
+
+      {toHop.imageUrl && !anhHong && (
         <div>
           <button
             onClick={() => xuLyTaiAnh(toHop.imageUrl as string)}
@@ -228,4 +242,4 @@ export default function SinhAnhAI({
       )}
     </div>
   );
-}
+}
